@@ -13,7 +13,8 @@ import types::*;
     input logic [7:0] out_rdata,
     output logic [7:0] out_wdata,
     output logic read_en, write_en, 
-    output logic [31:0] apb_addr
+    output logic [31:0] apb_addr,
+    output logic imem_ren, stall
 );
 
     logic [31:0] next_pc, pc;
@@ -21,7 +22,7 @@ import types::*;
 
 
     logic [31:0] pcsrc1, pcsrc2;
-    logic [63:0] if_id, next_if_id;
+    logic [31:0] if_id, next_if_id;
 
     logic [2:0] funct3;
     logic [4:0] rs1, rs2, rd;
@@ -42,7 +43,6 @@ import types::*;
 
     logic [38:0] ex_mem, next_ex_mem;
 
-    logic stall;
     logic [31:0] mem_rdata;
     logic [31:0] mem_wb, next_mem_wb;
 
@@ -52,7 +52,7 @@ import types::*;
 
     //if
 
-
+    assign imem_ren = en & ~((take_branch && id_ex[8]) || id_ex[9] || id_ex[10]) & ~stall;
     
     always_comb begin
         if(stall || ~en) begin
@@ -62,8 +62,7 @@ import types::*;
             next_if_id = '0;
         end
         else begin
-            next_if_id[31:0] = instr;
-            next_if_id[63:32] = pc;
+            next_if_id = pc;
         end
     end
 
@@ -73,7 +72,7 @@ import types::*;
     
     decoder d1(
         .clk(clk), .n_rst(n_rst),
-        .instr(if_id[31:0]),
+        .instr(instr),
         .funct3(funct3), 
         .rs1(rs1), .rs2(rs2), .rd(rd),
         .flush(((take_branch && id_ex[8]) || id_ex[9] || id_ex[10])),
@@ -107,7 +106,7 @@ import types::*;
             next_id_ex[14:8] = {renm, wenm, wen, memtoreg, jal, jalr, branch};
             next_id_ex[17:15] = funct3;
             next_id_ex[22:18] = rd;
-            next_id_ex[150:23] = {if_id[63:32], imm, rdata1, rdata2};
+            next_id_ex[150:23] = {if_id, imm, rdata1, rdata2};
             next_id_ex[152:151] = memsrc;
         end
     end

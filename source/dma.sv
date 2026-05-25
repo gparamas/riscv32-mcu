@@ -74,7 +74,7 @@ module dma #(
     always_comb begin
         case(state)
             IDLE, WAIT1, WAIT2, WAIT3, WAIT4, WAIT5, INCR: {read_en, write_en, raddr, wdata, pr_en} = '0;
-            READ1, READ2, READ3, READ4: {read_en, write_en, raddr, wdata, pr_en} = {1'b1, 1'b0, 32'h25006, 32'b0, 1'b0};
+            READ1, READ2, READ3, READ4: {read_en, write_en, raddr, wdata, pr_en} = {1'b1, 1'b0, 32'h2C006, 32'b0, 1'b0};
             WRITE: {read_en, write_en, raddr, wdata, pr_en} = {1'b0, 1'b1, 32'b0, instr, 1'b0};
             DONE: {read_en, write_en, raddr, wdata, pr_en} = {1'b0, 1'b0, 32'b0, 32'b0, 1'b1};
         endcase

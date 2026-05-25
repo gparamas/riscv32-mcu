@@ -1,6 +1,6 @@
-scripts/*
-waves/*
+scripts/
+waves/
 fusesoc.conf
-tmp/*
+tmp/
 *.core
 Makefile

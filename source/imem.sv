@@ -4,7 +4,7 @@ module imem #(
     // parameters
 ) (
     input logic clk, n_rst,
-    input logic wen, ren,
+    input logic wen, ren, stall,
     input logic [31:0] waddr, raddr,
     input logic [31:0] wdata,
     output logic [31:0] rdata
@@ -26,7 +26,7 @@ module imem #(
 
     always_comb begin
         nram = ram;
-        next_rdata = rdata;
+        next_rdata = stall ? rdata : '0;
         if(ren) begin
             next_rdata = ram[raddr[12:0]];
         end

@@ -16,6 +16,7 @@ module top_level #(
     logic [31:0] instr_wdata;
     logic [31:0] instr_waddr;
     logic uart_dreq, read_en_dma, write_en_dma, pr_en;
+    logic imem_ren, stall;
 
     dma dm1(
         .clk(clk), .n_rst(n_rst),
@@ -26,16 +27,16 @@ module top_level #(
 
     imem im1(
         .clk(clk), .n_rst(n_rst),
-        .wen(write_en_dma), .ren(pr_en), 
+        .wen(write_en_dma), .ren(imem_ren), .stall(stall),
         .waddr(instr_waddr), .raddr(iaddr),
         .wdata(instr_wdata), .rdata(instr)
     );
 
     pr1 p1(
         .clk(clk), .n_rst(n_rst), 
-        .instr(instr), .iaddr(iaddr), .out_rdata(out_rdata),
+        .instr(instr), .iaddr(iaddr), .out_rdata(out_rdata), .stall(stall),
         .read_en(read_en), .write_en(write_en),
-        .apb_addr(apb_addr_pr), .out_wdata(out_wdata), .en(pr_en)
+        .apb_addr(apb_addr_pr), .out_wdata(out_wdata), .en(pr_en), .imem_ren(imem_ren)
     );
 
     apb_manager am1(

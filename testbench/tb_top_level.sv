@@ -40,12 +40,14 @@ module tb_top_level ();
     
     initial begin
         imem = '{default: 0};
-        fptr = $fopen("/home/ecegridfs/a/337mg016/r5processor/mmio.bin", "rb");
+        fptr = $fopen("/home/ecegridfs/a/337mg016/r5processor/main.bin", "rb");
         size = $fread(imem, fptr);
         foreach (imem[i])
             imem[i] = {<<8{imem[i]}};
         $fclose(fptr);
     end
+
+    logic [7:0] uart_out;
 
     task send_packet;
         input [7:0] data;
@@ -56,7 +58,7 @@ module tb_top_level ();
         integer i;
         begin
             // First synchronize to away from clock's rising edge
-            @(negedge clk)
+            @(negedge clk);
             
             // Send start bit
             uart_rx = 1'b0;
@@ -75,11 +77,30 @@ module tb_top_level ();
         end
     endtask
 
+    task check_tx;
+        input int data_period;
+        integer i;
+        begin
+            wait(uart_tx == 1'b0);
+            uart_out = '0;
+            #(data_period * CLK_PERIOD / 2);
+
+            for(i = 0; i < 8; i = i + 1)
+            begin
+                #(data_period * CLK_PERIOD);
+                uart_out[i] = uart_tx;
+            end
+
+            #(data_period * CLK_PERIOD);
+        end
+    endtask
+
     
     
     int i, j;
     initial begin
         uart_rx = 1'b1;
+        uart_out = 0;
         
         n_rst = 1;
 
@@ -91,7 +112,15 @@ module tb_top_level ();
                 send_packet(imem[i][8*j +: 8], 1, 8, 10);
             end
         end
-        repeat(5000) @(posedge clk);
+        fork
+            repeat(5000) @(posedge clk);
+            begin
+                for(;;) begin
+                    check_tx(10);
+                end
+            end
+        join_any
+        disable fork;
 
         $finish;
     end
