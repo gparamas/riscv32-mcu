@@ -1,0 +1,6 @@
+scripts/*
+waves/*
+fusesoc.conf
+tmp/*
+*.core
+Makefile
