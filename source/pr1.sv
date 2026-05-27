@@ -29,7 +29,8 @@ import types::*;
     aluop_t aluop;
     logic [31:0] imm;
     logic [1:0] alusrc1, alusrc2, memsrc;
-    logic renm, wenm, memtoreg, wen, branch, jal, jalr;
+    logic renm, wenm, memtoreg, wen, branch, jal, jalr, load_stall;
+    logic mmio_stall;
 
 
     logic [31:0] rdata1, rdata2, reg_wdata;
@@ -49,6 +50,7 @@ import types::*;
     assign pcsrc2 = pc + 32'h4;
     assign pcsrc1 = id_ex[118:87] + (id_ex[9] ? id_ex[86:55] : id_ex[150:119]);
     assign next_pc = (stall || ~en) ? pc : (((take_branch && id_ex[8]) || id_ex[9] || id_ex[10]) ? pcsrc1 : pcsrc2);
+    assign stall = load_stall | mmio_stall;
 
     //if
 
@@ -79,7 +81,7 @@ import types::*;
         .aluop(aluop), 
         .imm(imm), 
         .alusrc1(alusrc1), .alusrc2(alusrc2),
-        .renm(renm), .wenm(wenm), .memtoreg(memtoreg), .wen(wen), .branch(branch), .jal(jal), .jalr(jalr), .memsrc(memsrc)
+        .renm(renm), .wenm(wenm), .memtoreg(memtoreg), .wen(wen), .branch(branch), .jal(jal), .jalr(jalr), .memsrc(memsrc), .load_stall(load_stall)
     );
 
 
@@ -114,7 +116,7 @@ import types::*;
     //ex
     alu a1(
         .aluop(aluop_t'(id_ex[3:0])),
-        .a(id_ex[5:4] == 2'b00 ? (id_ex[86:55]) : (id_ex[5:4] == 2'b01 ? reg_wdata : (id_ex[5:4] == 2'b11 ? mem_wb : id_ex[150:119]))), .b(id_ex[7:6] == 2'b00 ? (id_ex[54:23]) : (id_ex[7:6] == 2'b01 ? reg_wdata : (id_ex[7:6] == 2'b11 ? mem_wb : id_ex[118:87]))),
+        .a(id_ex[5:4] == 2'b00 ? (id_ex[86:55]) : (id_ex[5:4] == 2'b01 ? ex_mem[37:6] : (id_ex[5:4] == 2'b11 ? mem_wb[31:0] : id_ex[150:119]))), .b(id_ex[7:6] == 2'b00 ? (id_ex[54:23]) : (id_ex[7:6] == 2'b01 ? ex_mem[37:6] : (id_ex[7:6] == 2'b11 ? mem_wb[31:0] : id_ex[118:87]))),
         .funct3(id_ex[17:15]),
         .jal(id_ex[10]),
         .jalr(id_ex[9]),
@@ -128,16 +130,16 @@ import types::*;
     dmem memory(
         .clk(clk), .n_rst(n_rst),
         .renm(id_ex[14]), .wenm(id_ex[13]),
-        .addr(aluout - 32'h8000), .wdata(|id_ex[152:151] ? (&id_ex[152:151] ? mem_wb : reg_wdata) : id_ex[54:23]),
+        .addr(aluout - 32'h8000), .wdata(|id_ex[152:151] ? (&id_ex[152:151] ? mem_wb[31:0] : ex_mem[37:6]) : id_ex[54:23]),
         .funct3(id_ex[17:15]),
         .rdata(mem_rdata),
-        .stall(stall),
+        .stall(mmio_stall),
         .read_en(read_en), .write_en(write_en), .apb_addr(apb_addr), .out_rdata(out_rdata), .out_wdata(out_wdata)
     );
 
 
     always_comb begin
-        if(stall || ~en) begin
+        if(mmio_stall || ~en) begin
             next_ex_mem = ex_mem;
         end
         else begin

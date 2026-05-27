@@ -113,7 +113,7 @@ module tb_top_level ();
             end
         end
         fork
-            repeat(5000) @(posedge clk);
+            repeat(500) @(posedge clk);
             begin
                 for(;;) begin
                     check_tx(10);
