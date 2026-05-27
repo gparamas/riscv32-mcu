@@ -20,7 +20,6 @@ module dmem #(
 
     logic [31:0] data, n_data;
     logic [31:0] mask, n_mask;
-    logic [44800:0] [31:0] ram, nram;
     assign out_wdata = wdata[7:0];
 
     logic [1:0] state, next_state;
@@ -28,7 +27,6 @@ module dmem #(
 
     always_ff@(posedge clk, negedge n_rst) begin
         if(~n_rst) begin
-            ram <= '0;
             pwenm <= '0;
             prenm <= '0;
             paddr <= '0;
@@ -41,7 +39,6 @@ module dmem #(
         else begin
             data <= n_data;
             mask <= n_mask;
-            ram <= nram;
             pwenm <= wenm;
             prenm <= renm;
             paddr <= addr;
