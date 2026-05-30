@@ -70,7 +70,7 @@ module dmem #(
         stall = 0; read_en = 0; write_en = 0;
         ram_raddr = addr[16:2];
         if(renm || wenm) begin
-            if(addr < 32'h2C000) begin
+            if(!(&addr[17:16])) begin
                 ram_read_en = 1'b1;
                 if((addr[16:2] == paddr[16:2]) && renm && pwenm) begin
                     case(pfunct3[1:0])
@@ -108,7 +108,7 @@ module dmem #(
         ram_waddr = paddr[16:2];
         ram_write_en = 1'b0;
         ram_wdata = '0;
-        if(prenm && paddr < 32'h2C000) begin
+        if(prenm && (!(&paddr[17:16]))) begin
             case(pfunct3[1:0])
                 2'b00: rdata = pfunct3[2] ?  {24'b0, forwarded_data[{paddr[1:0], 3'b0} +: 8]} : {{24{forwarded_data[{paddr[1:0], 3'b0} + 7]}}, forwarded_data[{paddr[1:0], 3'b0} +: 8]};
                 2'b01: rdata = pfunct3[2] ? {16'b0, forwarded_data[{paddr[1:0], 3'b0} +: 16]} :  {{16{forwarded_data[{paddr[1:0], 3'b0} + 15]}}, forwarded_data[{paddr[1:0], 3'b0} +: 16]};
@@ -116,7 +116,7 @@ module dmem #(
                 default: rdata = forwarded_data;
             endcase
         end
-        else if (pwenm && paddr < 32'h2C000) begin
+        else if (pwenm && (!(&paddr[17:16]))) begin
             ram_write_en = 1'b1;
             case(pfunct3[1:0])
                 2'b00: begin 
@@ -136,7 +136,7 @@ module dmem #(
                 default: ram_wdata = pwdata;
             endcase
         end
-        else if (paddr >= 32'h2C000) begin
+        else if (&paddr[17:16]) begin
              rdata = {24'b0, out_rdata};
         end
     end

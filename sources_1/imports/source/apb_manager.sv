@@ -26,30 +26,31 @@ module apb_manager #(
     logic [7:0] r_wdata, n_r_wdata;
     logic r_write_en, n_r_write_en;
 
-    initial begin
-        state = IDLE;
-        psel_uart = 1'b0;
-        penable = 1'b0;
-        paddr = '0;
-        pwrite = '0;
-        pwdata = '0;
-        rdata = '0;
-        r_apb_addr = '0;
-        r_wdata = '0;
-        r_write_en = '0;
+
+    initial begin 
+            state = IDLE;
+            psel_uart = 1'b0;
+            penable = 1'b0;
+            paddr = '0;
+            pwrite = '0;
+            pwdata = '0;
+            rdata = '0;
+            r_apb_addr = '0;
+            r_wdata = '0;
+            r_write_en = '0;
     end
 
     always_ff@(posedge clk) begin
-        state <= n_state;
-        psel_uart <= n_psel_uart;
-        penable <= n_penable;
-        paddr <= n_paddr;
-        pwrite <= n_pwrite;
-        pwdata <= n_pwdata;
-        rdata <= n_rdata;
-        r_apb_addr <= n_r_apb_addr;
-        r_wdata <= n_r_wdata;
-        r_write_en <= n_r_write_en;
+            state <= n_state;
+            psel_uart <= n_psel_uart;
+            penable <= n_penable;
+            paddr <= n_paddr;
+            pwrite <= n_pwrite;
+            pwdata <= n_pwdata;
+            rdata <= n_rdata;
+            r_apb_addr <= n_r_apb_addr;
+            r_wdata <= n_r_wdata;
+            r_write_en <= n_r_write_en;
     end
 
     
@@ -65,7 +66,7 @@ module apb_manager #(
         n_r_wdata = r_wdata;
         n_r_write_en = r_write_en;
         if((read_en | write_en) && (state == IDLE)) begin
-            if(apb_addr >= 32'h2C000) begin
+            if(&apb_addr[17:16]) begin 
                 n_paddr = apb_addr[2:0];
                 n_psel_uart = 1'b1;
                 n_penable = 1'b0;
