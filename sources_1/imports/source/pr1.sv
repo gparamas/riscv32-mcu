@@ -41,6 +41,7 @@ import types::*;
 
     logic [31:0] aluout;
     logic take_branch;
+    logic [31:0] addr_compute;
 
     logic [38:0] ex_mem, next_ex_mem;
 
@@ -116,7 +117,8 @@ import types::*;
     //ex
     alu a1(
         .aluop(aluop_t'(id_ex[3:0])),
-        .a(id_ex[5:4] == 2'b00 ? (id_ex[86:55]) : (id_ex[5:4] == 2'b01 ? ex_mem[37:6] : (id_ex[5:4] == 2'b11 ? mem_wb[31:0] : id_ex[150:119]))), .b(id_ex[7:6] == 2'b00 ? (id_ex[54:23]) : (id_ex[7:6] == 2'b01 ? ex_mem[37:6] : (id_ex[7:6] == 2'b11 ? mem_wb[31:0] : id_ex[118:87]))),
+        .a(id_ex[5:4] == 2'b00 ? (id_ex[86:55]) : (id_ex[5:4] == 2'b01 ? ex_mem[37:6] : (id_ex[5:4] == 2'b11 ? mem_wb[31:0] : id_ex[150:119]))), 
+        .b(id_ex[7:6] == 2'b00 ? (id_ex[54:23]) : (id_ex[7:6] == 2'b01 ? ex_mem[37:6] : (id_ex[7:6] == 2'b11 ? mem_wb[31:0] : id_ex[118:87]))),
         .funct3(id_ex[17:15]),
         .jal(id_ex[10]),
         .jalr(id_ex[9]),
@@ -124,13 +126,14 @@ import types::*;
         .take_branch(take_branch)
     );
 
+    assign addr_compute = (id_ex[5:4] == 2'b00 ? (id_ex[86:55]) : (id_ex[5:4] == 2'b01 ? ex_mem[37:6] : (id_ex[5:4] == 2'b11 ? mem_wb[31:0] : id_ex[150:119]))) + id_ex[118:87];
 
     
 
     dmem memory(
         .clk(clk),
         .renm(id_ex[14]), .wenm(id_ex[13]),
-        .addr(aluout), .wdata(|id_ex[152:151] ? (&id_ex[152:151] ? mem_wb[31:0] : ex_mem[37:6]) : id_ex[54:23]),
+        .addr(addr_compute), .wdata(|id_ex[152:151] ? (&id_ex[152:151] ? mem_wb[31:0] : ex_mem[37:6]) : id_ex[54:23]),
         .funct3(id_ex[17:15]),
         .rdata(mem_rdata),
         .stall(mmio_stall),
