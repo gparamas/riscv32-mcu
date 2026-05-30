@@ -165,7 +165,8 @@ module decoder
 
     always_comb begin
         case(instr_type)
-            STORE, LOAD, AUIPC, JAL, JALR: aluop = ADD;
+            STORE, LOAD, AUIPC: aluop = ADD;
+            JAL, JALR: aluop = ADD4;
             LUI: aluop = PASSTHROUGH;
             REG_REG, REG_IMM: 
                 case(funct3)

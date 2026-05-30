@@ -118,8 +118,6 @@ import types::*;
         .aluop(aluop_t'(id_ex[3:0])),
         .a(id_ex[5:4] == 2'b00 ? (id_ex[86:55]) : (id_ex[5:4] == 2'b01 ? ex_mem[37:6] : (id_ex[5:4] == 2'b11 ? mem_wb[31:0] : id_ex[150:119]))), .b(id_ex[7:6] == 2'b00 ? (id_ex[54:23]) : (id_ex[7:6] == 2'b01 ? ex_mem[37:6] : (id_ex[7:6] == 2'b11 ? mem_wb[31:0] : id_ex[118:87]))),
         .funct3(id_ex[17:15]),
-        .jal(id_ex[10]),
-        .jalr(id_ex[9]),
         .c(aluout),
         .take_branch(take_branch)
     );

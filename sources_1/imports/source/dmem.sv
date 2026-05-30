@@ -92,7 +92,7 @@ module dmem #(
                     endcase
                 end
             end
-            else if(state != 2'b11) begin
+            else if(!(&state)) begin
                 stall = 1'b1;
                 next_state = state == 2'b0 ? 2'b01 : (state == 2'b01) ? 2'b11 : 2'b0;
                 read_en = renm;
