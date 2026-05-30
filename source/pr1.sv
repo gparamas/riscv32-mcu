@@ -89,7 +89,7 @@ import types::*;
         .clk(clk), .n_rst(n_rst),
         .rs1(rs1), .rs2(rs2), .rd(ex_mem[5:1]), 
         .wdata(reg_wdata),
-        .wen(ex_mem[38] & ~stall & en),
+        .wen(ex_mem[38] & ~mmio_stall & en),
         .rdata1(rdata1), .rdata2(rdata2)
     );
 
@@ -130,7 +130,7 @@ import types::*;
     dmem memory(
         .clk(clk), .n_rst(n_rst),
         .renm(id_ex[14]), .wenm(id_ex[13]),
-        .addr(aluout - 32'h8000), .wdata(|id_ex[152:151] ? (&id_ex[152:151] ? mem_wb[31:0] : ex_mem[37:6]) : id_ex[54:23]),
+        .addr(aluout), .wdata(|id_ex[152:151] ? (&id_ex[152:151] ? mem_wb[31:0] : ex_mem[37:6]) : id_ex[54:23]),
         .funct3(id_ex[17:15]),
         .rdata(mem_rdata),
         .stall(mmio_stall),

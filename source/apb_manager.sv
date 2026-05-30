@@ -66,7 +66,7 @@ module apb_manager #(
         n_r_wdata = r_wdata;
         n_r_write_en = r_write_en;
         if((read_en | write_en) && (state == IDLE)) begin
-            if(apb_addr >= 32'h2C000) begin
+            if(&apb_addr[17:16]) begin 
                 n_paddr = apb_addr[2:0];
                 n_psel_uart = 1'b1;
                 n_penable = 1'b0;
