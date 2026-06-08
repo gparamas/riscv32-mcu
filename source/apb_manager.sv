@@ -3,7 +3,7 @@
 module apb_manager #(
     // parameters
 ) (
-    input logic clk, n_rst,
+    input logic clk,
     input logic [7:0] prdata, wdata,
     input logic psaterr,
     input logic [31:0] apb_addr, 
@@ -26,31 +26,30 @@ module apb_manager #(
     logic [7:0] r_wdata, n_r_wdata;
     logic r_write_en, n_r_write_en;
 
-    always_ff@(posedge clk, negedge n_rst) begin
-        if(~n_rst) begin
-            state <= IDLE;
-            psel_uart <= 1'b0;
-            penable <= 1'b0;
-            paddr <= '0;
-            pwrite <= '0;
-            pwdata <= '0;
-            rdata <= '0;
-            r_apb_addr <= '0;
-            r_wdata <= '0;
-            r_write_en <= '0;
-        end
-        else begin
-            state <= n_state;
-            psel_uart <= n_psel_uart;
-            penable <= n_penable;
-            paddr <= n_paddr;
-            pwrite <= n_pwrite;
-            pwdata <= n_pwdata;
-            rdata <= n_rdata;
-            r_apb_addr <= n_r_apb_addr;
-            r_wdata <= n_r_wdata;
-            r_write_en <= n_r_write_en;
-        end
+    initial begin
+        state = IDLE;
+        psel_uart = 1'b0;
+        penable = 1'b0;
+        paddr = '0;
+        pwrite = '0;
+        pwdata = '0;
+        rdata = '0;
+        r_apb_addr = '0;
+        r_wdata = '0;
+        r_write_en = '0;
+    end
+
+    always_ff@(posedge clk) begin
+        state <= n_state;
+        psel_uart <= n_psel_uart;
+        penable <= n_penable;
+        paddr <= n_paddr;
+        pwrite <= n_pwrite;
+        pwdata <= n_pwdata;
+        rdata <= n_rdata;
+        r_apb_addr <= n_r_apb_addr;
+        r_wdata <= n_r_wdata;
+        r_write_en <= n_r_write_en;
     end
 
     

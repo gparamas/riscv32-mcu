@@ -3,29 +3,21 @@
 module tx_fifo #(
     // parameters
 ) (
-    input logic clk, n_rst,
+    input logic clk,
     input logic [7:0] tx_data_in,
     input logic load, done,
     output logic tx_full, tx_empty,
     output logic [7:0] tx_data_out
 );
 
-    logic [31:0][7:0] regs, next_regs;
-    logic [4:0] write_addr, next_write_addr, read_addr, next_read_addr, tx_count, next_tx_count;
+    logic [31:0][7:0] regs = '0, next_regs;
+    logic [4:0] write_addr = '0, next_write_addr, read_addr = '0, next_read_addr, tx_count = '0, next_tx_count;
 
-    always_ff@(posedge clk, negedge n_rst) begin
-        if(~n_rst) begin
-            regs <= '0;
-            write_addr <= '0;
-            read_addr <= '0;
-            tx_count <= '0;
-        end
-        else begin
-            regs <= next_regs;
-            write_addr <= next_write_addr;
-            read_addr <= next_read_addr;
-            tx_count <= next_tx_count;
-        end
+    always_ff@(posedge clk) begin
+        regs <= next_regs;
+        write_addr <= next_write_addr;
+        read_addr <= next_read_addr;
+        tx_count <= next_tx_count;
     end
 
     always_comb begin: REGS_AND_WRITE_ADDR

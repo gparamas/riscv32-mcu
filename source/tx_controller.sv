@@ -3,7 +3,7 @@
 module tx_controller #(
     // parameters
 ) (
-    input logic clk, n_rst,
+    input logic clk,
     input logic tx_empty, packet_done, 
     output logic timer_en, load_en
 );
@@ -12,15 +12,10 @@ module tx_controller #(
         IDLE, LOAD, SEND
     } state_t;
 
-    state_t state, next_state;
+    state_t state = IDLE, next_state;
 
-    always_ff@(posedge clk, negedge n_rst) begin
-        if(~n_rst) begin
-            state <= IDLE;
-        end
-        else begin
-            state <= next_state;
-        end
+    always_ff@(posedge clk) begin
+        state <= next_state;
     end
 
 

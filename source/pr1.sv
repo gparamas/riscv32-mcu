@@ -6,7 +6,7 @@ import types::*;
 #(
     // parameters
 ) (
-    input logic clk, n_rst,
+    input logic clk,
     input logic [31:0] instr,
     input logic en,
     output logic [31:0] iaddr,
@@ -71,7 +71,7 @@ import types::*;
     
     
     decoder d1(
-        .clk(clk), .n_rst(n_rst),
+        .clk(clk),
         .instr(instr),
         .funct3(funct3), 
         .rs1(rs1), .rs2(rs2), .rd(rd),
@@ -84,7 +84,7 @@ import types::*;
 
 
     reg_file r1(
-        .clk(clk), .n_rst(n_rst),
+        .clk(clk),
         .rs1(rs1), .rs2(rs2), .rd(ex_mem[5:1]), 
         .wdata(reg_wdata),
         .wen(ex_mem[38] & ~stall & en),
@@ -126,7 +126,7 @@ import types::*;
     
 
     dmem memory(
-        .clk(clk), .n_rst(n_rst),
+        .clk(clk),
         .renm(id_ex[14]), .wenm(id_ex[13]),
         .addr(aluout - 32'h8000), .wdata(|id_ex[152:151] ? (&id_ex[152:151] ? mem_wb : reg_wdata) : id_ex[54:23]),
         .funct3(id_ex[17:15]),
@@ -154,21 +154,20 @@ import types::*;
 
     assign next_mem_wb = (stall || ~en )? mem_wb : reg_wdata;
 
-    always_ff@(posedge clk, negedge n_rst) begin
-        if(~n_rst) begin
-            pc <= '0;
-            if_id <= '0;
-            id_ex <= '0;
-            ex_mem <= '0;
-            mem_wb <= '0;
-        end
-        else begin
-            pc <= next_pc;
-            if_id <= next_if_id;
-            id_ex <= next_id_ex;
-            ex_mem <= next_ex_mem;
-            mem_wb <= next_mem_wb;
-        end
+    initial begin
+        pc = '0;
+        if_id = '0;
+        id_ex = '0;
+        ex_mem = '0;
+        mem_wb = '0;
+    end
+
+    always_ff@(posedge clk) begin
+        pc <= next_pc;
+        if_id <= next_if_id;
+        id_ex <= next_id_ex;
+        ex_mem <= next_ex_mem;
+        mem_wb <= next_mem_wb;
     end
 
 

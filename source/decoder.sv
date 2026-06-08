@@ -5,7 +5,7 @@ module decoder
  #(
     // parameters
 ) (
-    input logic clk, n_rst,
+    input logic clk,
     input logic [31:0] instr,
     input logic flush,
     output logic [2:0] funct3, 
@@ -19,18 +19,15 @@ module decoder
     logic [4:0] prd, prd2;
     instr_t instr_type;
 
+    initial begin
+        prd = '0;
+        prd2 = '0;
+    end
 
 
-
-    always_ff@(posedge clk, negedge n_rst) begin
-        if(~n_rst) begin
-            prd <= '0;
-            prd2 <= '0;
-        end
-        else begin
-            prd <= flush ? '0 : rd & {5{instr_type != BRANCH && instr_type != STORE}};
-            prd2 <= flush ? '0 : prd;
-        end
+    always_ff@(posedge clk) begin
+        prd <= flush ? '0 : rd & {5{instr_type != BRANCH && instr_type != STORE}};
+        prd2 <= flush ? '0 : prd;
     end
 
     logic [6:0] opcode;

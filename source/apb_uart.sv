@@ -3,7 +3,7 @@
 module apb_uart #(
     // parameters
 ) (
-    input logic clk, n_rst, serial_in, psel, penable, pwrite,
+    input logic clk, serial_in, psel, penable, pwrite,
     input logic [2:0] paddr,
     input logic [7:0] pwdata,
     output logic [7:0] prdata,
@@ -22,7 +22,6 @@ module apb_uart #(
 
     apb_subordinate a1(
         .clk(clk),
-        .n_rst(n_rst),
         .data_ready(data_ready),
         .overrun_error(overrun_error),
         .framing_error(framing_error),
@@ -46,7 +45,6 @@ module apb_uart #(
 
     tx_fifo f1(
         .clk(clk),
-        .n_rst(n_rst),
         .tx_data_in(tx_data_in),
         .load(load),
         .tx_empty(tx_empty),
@@ -57,7 +55,6 @@ module apb_uart #(
 
     tx_serializer t1(
         .clk(clk),
-        .n_rst(n_rst),
         .tx_data_out(tx_data_out),
         .tx_empty(tx_empty),
         .data_size(data_size),
@@ -68,7 +65,6 @@ module apb_uart #(
 
     rcv_block rcv(
         .clk(clk),
-        .n_rst(n_rst),
         .serial_in(serial_in),
         .data_read(data_read),
         .data_size(data_size),
