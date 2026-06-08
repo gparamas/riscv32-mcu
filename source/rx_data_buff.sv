@@ -3,7 +3,7 @@
 module rx_data_buff #(
     // parameters
 ) (
-    input logic clk,
+    input logic clk, n_rst, 
     input logic load_buffer,
     input logic [7:0] packet_data,
     input logic data_read,

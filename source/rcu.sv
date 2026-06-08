@@ -7,7 +7,6 @@ module rcu (
 
     typedef enum logic [3:0] {IDLE, CLEAR_F_ERROR, LOAD, CHECK_STOP_BIT, WAIT_STOP_BIT, SEND} state_t;
 
-    state_t state, n_state;
 
 `ifdef vivado
     state_t state = IDLE, n_state;

@@ -8,13 +8,17 @@ module top_level #(
     output logic uart_tx
 );
     logic clk_out, locked;
-    
+
+`ifdef vivado 
     clk_wiz_0 clk_wiz_inst (
     .clk_in1  (clk),
     .clk_out1 (clk_out),
     .reset    (1'b0),
     .locked   (locked)
 );
+`else
+    assign clk_out = clk;  
+`endif
 
     logic read_en, write_en;
     logic [31:0] apb_addr_pr, apb_addr_dma, iaddr, instr;

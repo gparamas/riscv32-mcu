@@ -109,14 +109,14 @@ module tb_top_level ();
 
         for(i = 0; i < size / 4; i++) begin
             for(j = 0; j < 4; j++) begin
-                send_packet(imem[i][8*j +: 8], 1, 8, 10);
+                send_packet(imem[i][8*j +: 8], 1, 8, 100);
             end
         end
         fork
-            repeat(500) @(posedge clk);
+            repeat(5000) @(posedge clk);
             begin
                 for(;;) begin
-                    check_tx(10);
+                    check_tx(100);
                 end
             end
         join_any

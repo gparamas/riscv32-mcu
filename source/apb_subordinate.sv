@@ -31,7 +31,7 @@ module apb_subordinate (
         s_estatus = 2'b0;
         s_prdata = 8'b0;
         s_dsize = 4'h8;
-        s_bitperiod = 14'ha;
+        s_bitperiod = 14'h64;
         s_psaterr = 1'b0;
         s_data_read = 1'b0;
         tx_data = 8'hFF;
@@ -58,7 +58,7 @@ module apb_subordinate (
             s_dstatus <= 1'b0;
             s_prdata <= 8'b0;
             s_dsize <= 4'h8;
-            s_bitperiod <= 14'ha;
+            s_bitperiod <= 14'h64;
             s_psaterr <= 1'b0;
             s_data_read <= 1'b0;
             tx_data <= 8'hFF;
