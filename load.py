@@ -5,7 +5,6 @@ s = serial.Serial('COM11', 10000000, timeout=1)
 
 
 code = np.fromfile("main.bin", dtype=np.uint32)
-code = np.append(code, [np.uint32(0xFFFFFFFF)])
 
 hex_array_with_prefix = [f"0x{x:08x}" for x in code]
 
