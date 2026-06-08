@@ -25,6 +25,32 @@ module apb_subordinate (
     assign n_uart_dreq = next_dstatus && ~s_dstatus;
 
 
+`ifdef vivado
+    initial begin
+        s_dstatus = 1'b0;
+        s_estatus = 2'b0;
+        s_prdata = 8'b0;
+        s_dsize = 4'h8;
+        s_bitperiod = 14'ha;
+        s_psaterr = 1'b0;
+        s_data_read = 1'b0;
+        tx_data = 8'hFF;
+        s_load = 1'b0;
+        uart_dreq = '0;
+    end
+    always_ff@(posedge clk) begin
+        uart_dreq <= n_uart_dreq;
+        s_estatus <= next_estatus;
+        s_dstatus <= next_dstatus;
+        s_prdata <= next_prdata;
+        s_dsize <= next_dsize;
+        s_bitperiod <= next_bitperiod;
+        s_psaterr <= next_psaterr;
+        s_data_read <= next_data_read;
+        tx_data <= next_tx_data;
+        s_load <= next_load;
+    end
+`else
     always_ff@(posedge clk, negedge n_rst) begin
         if(~n_rst) begin
             uart_dreq <= '0;
@@ -50,6 +76,7 @@ module apb_subordinate (
             s_load <= next_load;
         end
     end
+`endif
 
     assign next_estatus = {overrun_error, framing_error};
 

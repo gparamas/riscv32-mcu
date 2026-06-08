@@ -10,6 +10,14 @@ module stop_bit_chk_2 #(
 );
     logic next_framing_error;
 
+`ifdef vivado
+    initial begin
+        framing_error = 1'b0;
+    end
+    always_ff@(posedge clk) begin
+        framing_error <= next_framing_error;
+    end
+`else
     always_ff@(posedge clk, negedge n_rst) begin
         if(~n_rst) begin
             framing_error <= 1'b0;
@@ -17,6 +25,7 @@ module stop_bit_chk_2 #(
             framing_error <= next_framing_error;
         end
     end
+`endif
 
     assign next_framing_error = sbc_enable ? stop_bit != 1'b1 : (sbc_clear ? 1'b0 : framing_error);
 

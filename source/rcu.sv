@@ -9,6 +9,16 @@ module rcu (
 
     state_t state, n_state;
 
+`ifdef vivado
+    state_t state = IDLE, n_state;
+    initial begin
+        state = IDLE;
+    end
+    always_ff@(posedge clk) begin
+        state <= n_state;
+    end
+`else
+    state_t state, n_state;
     always_ff@(posedge clk, negedge n_rst) begin
         if(~n_rst) begin
             state <= IDLE;
@@ -16,6 +26,7 @@ module rcu (
             state <= n_state;
         end
     end
+`endif
 
     always_comb begin
         case(state) 

@@ -11,6 +11,15 @@ module ram #(
 );
     logic [31:0] ram [DEPTH-1:0];
 
+`ifdef vivado
+    initial begin
+        rdata = '0;
+    end
+    always_ff@(posedge clk) begin
+        if (ren) begin rdata <= ram[raddr]; end
+        if (wen) begin ram[waddr] <= wdata; end
+    end
+`else
     always_ff@(posedge clk, negedge n_rst) begin
         if(~n_rst) begin
             rdata <= '0;
@@ -19,5 +28,6 @@ module ram #(
             if (wen) begin ram[waddr] <= wdata; end
         end
     end
+`endif
 
 endmodule

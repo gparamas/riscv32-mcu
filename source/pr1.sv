@@ -159,6 +159,22 @@ import types::*;
 
     assign next_mem_wb = (stall || ~en )? mem_wb : reg_wdata;
     
+`ifdef vivado
+    initial begin
+            pc = '0;
+            if_id = '0;
+            id_ex = '0;
+            ex_mem = '0;
+            mem_wb = '0;
+    end
+    always_ff@(posedge clk) begin
+            pc <= next_pc;
+            if_id <= next_if_id;
+            id_ex <= next_id_ex;
+            ex_mem <= next_ex_mem;
+            mem_wb <= next_mem_wb;
+    end
+`else
     always_ff@(posedge clk, negedge n_rst) begin
         if(~n_rst) begin
             pc <= '0;
@@ -174,6 +190,7 @@ import types::*;
             mem_wb <= next_mem_wb;
         end
     end
+`endif
 
 
     

@@ -10,8 +10,13 @@ module flex_sr #(
     output logic serial_out
 );
 
+`ifdef vivado
+    logic [SIZE-1:0] Q = '1, next_Q;
+    always_ff@(posedge clk) begin
+        Q <= next_Q;
+    end
+`else
     logic [SIZE-1:0] Q, next_Q;
-    
     always_ff@(posedge clk, negedge n_rst) begin
         if(~n_rst) begin
             Q <= '1;
@@ -19,6 +24,7 @@ module flex_sr #(
             Q <= next_Q;
         end
     end
+`endif
     
     always_comb begin
         if(load_enable) begin

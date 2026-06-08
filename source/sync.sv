@@ -10,6 +10,17 @@ module sync #(
     logic ff_1, ff_2;
 
     //flip flop logic - if n_rst is low assert to RST_VAL, otherwise propagate the input signal
+`ifdef vivado
+    logic ff_1 = RST_VAL, ff_2 = RST_VAL;
+    initial begin
+        ff_1 = RST_VAL;
+        ff_2 = RST_VAL;
+    end
+    always_ff@(posedge clk) begin
+        ff_1 <= async_in;
+        ff_2 <= ff_1;
+    end
+`else
     always_ff@(posedge clk, negedge n_rst) begin
         if(~n_rst) begin
             ff_1 <= RST_VAL;
@@ -19,6 +30,7 @@ module sync #(
             ff_2 <= ff_1;
         end
     end
+`endif
 
     //take output from end of second flip flop
     assign sync_out = ff_2;

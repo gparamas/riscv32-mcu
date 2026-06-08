@@ -14,6 +14,16 @@ module imem #(
     logic pstall, pren;
     
     
+`ifdef vivado
+    initial begin
+         pstall = '0;
+         pren = '0;
+    end
+    always_ff@(posedge clk) begin
+        pstall <= stall;
+        pren <= ren;
+    end
+`else
     always_ff@(posedge clk, negedge n_rst) begin
         if(~n_rst) begin
             pstall <= '0;
@@ -23,6 +33,7 @@ module imem #(
             pren <= ren;
         end
     end
+`endif
 
 
     ram #(.DEPTH(8192)) irambf (

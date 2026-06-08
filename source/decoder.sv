@@ -22,6 +22,18 @@ module decoder
     
     
 
+`ifdef vivado
+    initial begin
+        prd = '0;
+        prd2 = '0;
+        prev_instr_type = IDLE;
+    end
+    always_ff@(posedge clk) begin
+            prd <= flush ? '0 : rd & {5{instr_type != BRANCH && instr_type != STORE}};
+            prd2 <= flush ? '0 : prd;  
+            prev_instr_type <= instr_type;
+    end
+`else
     always_ff@(posedge clk, negedge n_rst) begin
         if(~n_rst) begin
             prd <= '0;
@@ -33,6 +45,7 @@ module decoder
             prev_instr_type <= instr_type;
         end
     end
+`endif
 
     logic [6:0] opcode;
     logic [6:0] funct7;

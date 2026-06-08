@@ -14,6 +14,14 @@ module flex_counter #(
     logic[SIZE-1:0] n_c_out;
     logic n_r_flag;
 
+`ifdef vivado
+    initial begin
+        {count_out, rollover_flag} = (SIZE + 1)'('b0);
+    end
+    always_ff@(posedge clk) begin
+        {count_out , rollover_flag} <= {n_c_out, n_r_flag};
+    end
+`else
     always_ff@(posedge clk, negedge n_rst) begin
         if(~n_rst) begin
             {count_out, rollover_flag} <= (SIZE + 1)'('b0);
@@ -21,6 +29,7 @@ module flex_counter #(
             {count_out , rollover_flag} <= {n_c_out, n_r_flag};
         end
     end
+`endif
 
     always_comb begin
         if(clear) begin

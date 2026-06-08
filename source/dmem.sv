@@ -25,6 +25,28 @@ module dmem #(
     logic [1:0] state, next_state;
     assign apb_addr = addr;
     
+`ifdef vivado
+    initial begin
+        pwenm = '0;
+        prenm = '0;
+        paddr = '0;
+        pwdata = '0;
+        pfunct3 = '0;
+        data = '0;
+        mask = '1;
+        state = '0;
+    end
+    always_ff@(posedge clk) begin
+            data <= n_data;
+            mask <= n_mask;
+            pwenm <= wenm;
+            prenm <= renm;
+            paddr <= addr;
+            pwdata <= wdata;
+            pfunct3 <= funct3;
+            state <= next_state;
+    end
+`else
     always_ff@(posedge clk, negedge n_rst) begin
         if(~n_rst) begin
             pwenm <= '0;
@@ -46,6 +68,7 @@ module dmem #(
             state <= next_state;
         end
     end
+`endif
 
 
     logic [14:0] ram_raddr, ram_waddr;

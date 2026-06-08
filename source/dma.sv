@@ -21,6 +21,18 @@ module dma #(
 
     assign waddr = c_waddr;
 
+`ifdef vivado
+    initial begin
+        state = IDLE;
+        instr = '0;
+        c_waddr = '0;
+    end
+    always_ff@(posedge clk) begin
+        state <= n_state;
+        instr <= n_instr;
+        c_waddr <= n_waddr;
+    end
+`else
     always_ff@(posedge clk, negedge n_rst) begin
         if(~n_rst) begin
             state <= IDLE;
@@ -32,6 +44,7 @@ module dma #(
             c_waddr <= n_waddr;
         end
     end
+`endif
 
     always_comb begin
         case(state)

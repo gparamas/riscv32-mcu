@@ -14,6 +14,15 @@ module tx_controller #(
 
     state_t state, next_state;
 
+`ifdef vivado
+    state_t state = IDLE, next_state;
+    initial begin
+        state = IDLE;
+    end
+    always_ff@(posedge clk) begin
+        state <= next_state;
+    end
+`else
     always_ff@(posedge clk, negedge n_rst) begin
         if(~n_rst) begin
             state <= IDLE;
@@ -21,6 +30,7 @@ module tx_controller #(
             state <= next_state;
         end
     end
+`endif
 
 
     always_comb begin: NEXT_STATE_LOGIC

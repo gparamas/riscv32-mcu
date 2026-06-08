@@ -12,6 +12,15 @@ module reg_file #(
     logic [31:0][31:0] regfile;
     logic [31:0][31:0] n_regfile;
 
+`ifdef vivado
+    logic [31:0][31:0] regfile = '0;
+    initial begin
+        regfile = '0;
+    end
+    always_ff@(posedge clk) begin
+        regfile <= n_regfile;
+    end
+`else
     always_ff@(posedge clk, negedge n_rst) begin
         if(~n_rst) begin
             regfile <= '0;
@@ -19,6 +28,7 @@ module reg_file #(
             regfile <= n_regfile;
         end
     end
+`endif
 
     always_comb begin
         n_regfile = regfile;
