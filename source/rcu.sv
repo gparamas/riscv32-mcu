@@ -1,16 +1,20 @@
 `timescale 1ns / 10ps
 
 module rcu (
-    input logic clk, new_packet_detected, packet_done, framing_error, 
+    input logic clk, input logic n_rst, new_packet_detected, packet_done, framing_error, 
     output logic sbc_clear, sbc_enable, load_buffer, enable_timer
 );
 
     typedef enum logic [3:0] {IDLE, CLEAR_F_ERROR, LOAD, CHECK_STOP_BIT, WAIT_STOP_BIT, SEND} state_t;
 
-    state_t state = IDLE, n_state;
+    state_t state, n_state;
 
-    always_ff@(posedge clk) begin
-        state <= n_state;
+    always_ff@(posedge clk, negedge n_rst) begin
+        if(~n_rst) begin
+            state <= IDLE;
+        end else begin
+            state <= n_state;
+        end
     end
 
     always_comb begin

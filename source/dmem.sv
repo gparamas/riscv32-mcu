@@ -3,7 +3,7 @@
 module dmem #(
     // parameters
 ) (
-    input logic clk,
+    input logic clk, input logic n_rst,
     input logic renm, wenm,
     input logic [31:0] addr, wdata,
     input logic [2:0] funct3,
@@ -25,18 +25,17 @@ module dmem #(
     logic [1:0] state, next_state;
     assign apb_addr = addr;
     
-    initial begin
-        pwenm = '0;
-        prenm = '0;
-        paddr = '0;
-        pwdata = '0;
-        pfunct3 = '0;
-        data = '0;
-        mask = '1;
-        state = '0;
-    end
-
-    always_ff@(posedge clk) begin
+    always_ff@(posedge clk, negedge n_rst) begin
+        if(~n_rst) begin
+            pwenm <= '0;
+            prenm <= '0;
+            paddr <= '0;
+            pwdata <= '0;
+            pfunct3 <= '0;
+            data <= '0;
+            mask <= '1;
+            state <= '0;
+        end else begin
             data <= n_data;
             mask <= n_mask;
             pwenm <= wenm;
@@ -45,6 +44,7 @@ module dmem #(
             pwdata <= wdata;
             pfunct3 <= funct3;
             state <= next_state;
+        end
     end
 
 
@@ -53,7 +53,7 @@ module dmem #(
     logic ram_read_en, ram_write_en;
 
     ram #(.DEPTH(32768)) rambf (
-        .clk(clk),
+        .clk(clk), .n_rst(n_rst),
         .raddr(ram_raddr),
         .waddr(ram_waddr),
         .ren(ram_read_en),

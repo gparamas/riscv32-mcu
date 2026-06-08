@@ -3,7 +3,7 @@
 module flex_counter #(
         SIZE = 8
     ) (
-        input logic clk,
+        input logic clk, input logic n_rst,
         input logic clear, count_enable,
         input logic [SIZE-1:0] rollover_val,
         output logic [SIZE-1:0] count_out,
@@ -14,12 +14,12 @@ module flex_counter #(
     logic[SIZE-1:0] n_c_out;
     logic n_r_flag;
 
-    initial begin
-        {count_out, rollover_flag} = (SIZE + 1)'('b0);
-    end
-
-    always_ff@(posedge clk) begin
-        {count_out , rollover_flag} <= {n_c_out, n_r_flag};
+    always_ff@(posedge clk, negedge n_rst) begin
+        if(~n_rst) begin
+            {count_out, rollover_flag} <= (SIZE + 1)'('b0);
+        end else begin
+            {count_out , rollover_flag} <= {n_c_out, n_r_flag};
+        end
     end
 
     always_comb begin

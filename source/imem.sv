@@ -3,7 +3,7 @@
 module imem #(
     // parameters
 ) (
-    input logic clk,
+    input logic clk, input logic n_rst,
     input logic wen, ren, stall,
     input logic [31:0] waddr, raddr,
     input logic [31:0] wdata,
@@ -14,19 +14,19 @@ module imem #(
     logic pstall, pren;
     
     
-    initial begin
-         pstall = '0;
-         pren = '0;
-    end
-
-    always_ff@(posedge clk) begin
-        pstall <= stall;
-        pren <= ren;
+    always_ff@(posedge clk, negedge n_rst) begin
+        if(~n_rst) begin
+            pstall <= '0;
+            pren <= '0;
+        end else begin
+            pstall <= stall;
+            pren <= ren;
+        end
     end
 
 
     ram #(.DEPTH(8192)) irambf (
-        .clk(clk),
+        .clk(clk), .n_rst(n_rst),
         .raddr(raddr[12:0]),
         .waddr(waddr[12:0]),
         .ren(ren),

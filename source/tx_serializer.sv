@@ -3,7 +3,7 @@
 module tx_serializer #(
     // parameters
 ) (
-    input logic clk,
+    input logic clk, input logic n_rst,
     input logic tx_empty,
     input logic [7:0] tx_data_out,
     input logic [13:0] bit_period,
@@ -25,9 +25,9 @@ module tx_serializer #(
     end
     logic packet_done, timer_en, load_en, shift_strobe;
     
-    flex_sr #(.SIZE(10)) sr(.clk(clk), .shift_enable(shift_strobe), .load_enable(load_en), .parallel_in(packet), .serial_out(uart_tx), .serial_in(1'b1));
-    tx_controller tx_con(.clk(clk), .tx_empty(tx_empty), .packet_done(packet_done), .timer_en(timer_en), .load_en(load_en));
-    tx_timer t1(.clk(clk), .timer_en(timer_en), .bit_period(bit_period), .data_size(data_size), .packet_done(packet_done), .shift_strobe(shift_strobe));
+    flex_sr #(.SIZE(10)) sr(.clk(clk), .n_rst(n_rst), .shift_enable(shift_strobe), .load_enable(load_en), .parallel_in(packet), .serial_out(uart_tx), .serial_in(1'b1));
+    tx_controller tx_con(.clk(clk), .n_rst(n_rst), .tx_empty(tx_empty), .packet_done(packet_done), .timer_en(timer_en), .load_en(load_en));
+    tx_timer t1(.clk(clk), .n_rst(n_rst), .timer_en(timer_en), .bit_period(bit_period), .data_size(data_size), .packet_done(packet_done), .shift_strobe(shift_strobe));
 
     assign done = packet_done;
 

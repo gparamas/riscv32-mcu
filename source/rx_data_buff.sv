@@ -15,16 +15,16 @@ module rx_data_buff #(
     logic [7:0] next_rx_data;
     logic next_overrun_error;
     logic next_data_ready;
-    initial begin
-        rx_data = 8'hFF;
-        overrun_error = '0;
-        data_ready = '0;
-    end
-
-    always_ff@(posedge clk) begin
-        rx_data <= next_rx_data;
-        overrun_error <= next_overrun_error;
-        data_ready <= next_data_ready;
+    always_ff@(posedge clk, negedge n_rst) begin
+        if(~n_rst) begin
+            rx_data <= 8'hFF;
+            overrun_error <= '0;
+            data_ready <= '0;
+        end else begin
+            rx_data <= next_rx_data;
+            overrun_error <= next_overrun_error;
+            data_ready <= next_data_ready;
+        end
     end
 
     assign next_rx_data = load_buffer ? packet_data : rx_data;

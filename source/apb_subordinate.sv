@@ -1,7 +1,7 @@
 `timescale 1ns / 10ps
 
 module apb_subordinate (
-    input logic clk, data_ready, overrun_error, framing_error, psel, penable, pwrite, tx_full, tx_busy,
+    input logic clk, input logic n_rst, data_ready, overrun_error, framing_error, psel, penable, pwrite, tx_full, tx_busy,
     input logic [7:0] rx_data, pwdata,
     input logic [2:0] paddr,
     output logic data_read, psaterr, load,
@@ -24,30 +24,31 @@ module apb_subordinate (
 
     assign n_uart_dreq = next_dstatus && ~s_dstatus;
 
-    initial begin
-        s_dstatus = 1'b0;
-        s_estatus = 2'b0;
-        s_prdata = 8'b0;
-        s_dsize = 4'h8;
-        s_bitperiod = 14'ha;
-        s_psaterr = 1'b0;
-        s_data_read = 1'b0;
-        tx_data = 8'hFF;
-        s_load = 1'b0;
-        uart_dreq = '0;
-    end
 
-    always_ff@(posedge clk) begin
-        uart_dreq <= n_uart_dreq;
-        s_estatus <= next_estatus;
-        s_dstatus <= next_dstatus;
-        s_prdata <= next_prdata;
-        s_dsize <= next_dsize;
-        s_bitperiod <= next_bitperiod;
-        s_psaterr <= next_psaterr;
-        s_data_read <= next_data_read;
-        tx_data <= next_tx_data;
-        s_load <= next_load;
+    always_ff@(posedge clk, negedge n_rst) begin
+        if(~n_rst) begin
+            uart_dreq <= '0;
+            s_estatus <= 2'b0;
+            s_dstatus <= 1'b0;
+            s_prdata <= 8'b0;
+            s_dsize <= 4'h8;
+            s_bitperiod <= 14'ha;
+            s_psaterr <= 1'b0;
+            s_data_read <= 1'b0;
+            tx_data <= 8'hFF;
+            s_load <= 1'b0;
+        end else begin
+            uart_dreq <= n_uart_dreq;
+            s_estatus <= next_estatus;
+            s_dstatus <= next_dstatus;
+            s_prdata <= next_prdata;
+            s_dsize <= next_dsize;
+            s_bitperiod <= next_bitperiod;
+            s_psaterr <= next_psaterr;
+            s_data_read <= next_data_read;
+            tx_data <= next_tx_data;
+            s_load <= next_load;
+        end
     end
 
     assign next_estatus = {overrun_error, framing_error};

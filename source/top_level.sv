@@ -3,7 +3,7 @@
 module top_level #(
     // parameters
 ) (
-    input logic clk,
+    input logic clk, input logic n_rst,
     input logic uart_rx,
     output logic uart_tx
 );
@@ -27,28 +27,28 @@ module top_level #(
     logic imem_ren, stall;
 
     dma dm1(
-        .clk(clk_out),
+        .clk(clk_out), .n_rst(n_rst),
         .rdata(out_rdata), .uart_dreq(uart_dreq), 
         .read_en(read_en_dma), .write_en(write_en_dma), .pr_en(pr_en),
         .wdata(instr_wdata), .waddr(instr_waddr), .raddr(apb_addr_dma)
     );
 
     imem im1(
-        .clk(clk_out),
+        .clk(clk_out), .n_rst(n_rst),
         .wen(write_en_dma), .ren(imem_ren), .stall(stall),
         .waddr(instr_waddr), .raddr(iaddr),
         .wdata(instr_wdata), .rdata(instr)
     );
 
     pr1 p1(
-        .clk(clk_out),
+        .clk(clk_out), .n_rst(n_rst),
         .instr(instr), .iaddr(iaddr), .out_rdata(out_rdata), .stall(stall),
         .read_en(read_en), .write_en(write_en),
         .apb_addr(apb_addr_pr), .out_wdata(out_wdata), .en(pr_en), .imem_ren(imem_ren)
     );
 
     apb_manager am1(
-        .clk(clk_out),
+        .clk(clk_out), .n_rst(n_rst),
         .prdata(prdata), .psaterr(psaterr),
         .apb_addr(pr_en ? apb_addr_pr : apb_addr_dma), .wdata(out_wdata),
         .read_en(pr_en ? read_en : read_en_dma), .write_en(pr_en ? write_en : write_en_dma),
@@ -58,7 +58,7 @@ module top_level #(
     );
 
     apb_uart au1(
-        .clk(clk_out),
+        .clk(clk_out), .n_rst(n_rst),
         .serial_in(uart_rx), .uart_tx(uart_tx),
         .psel(psel_uart), .penable(penable), .pwrite(pwrite),
         .paddr(paddr), .pwdata(pwdata), .prdata(prdata),

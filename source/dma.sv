@@ -3,7 +3,7 @@
 module dma #(
     // parameters
 ) (
-    input logic clk,
+    input logic clk, input logic n_rst,
     input logic [7:0] rdata,
     input logic uart_dreq,
     output logic read_en, write_en, pr_en,
@@ -21,16 +21,16 @@ module dma #(
 
     assign waddr = c_waddr;
 
-    initial begin
-        state = IDLE;
-        instr = '0;
-        c_waddr = '0;
-    end
-
-    always_ff@(posedge clk) begin
-        state <= n_state;
-        instr <= n_instr;
-        c_waddr <= n_waddr;
+    always_ff@(posedge clk, negedge n_rst) begin
+        if(~n_rst) begin
+            state <= IDLE;
+            instr <= '0;
+            c_waddr <= '0;
+        end else begin
+            state <= n_state;
+            instr <= n_instr;
+            c_waddr <= n_waddr;
+        end
     end
 
     always_comb begin
