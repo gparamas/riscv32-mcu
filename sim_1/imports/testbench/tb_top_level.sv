@@ -110,7 +110,7 @@ module tb_top_level ();
 
         for(i = 0; i < size / 4; i++) begin
             for(j = 0; j < 4; j++) begin
-                send_packet(imem[i][8*j +: 8], 1, 8, 10);
+                send_packet(imem[i][8*j +: 8], 1, 8, 100);
             end
         end
         fork
