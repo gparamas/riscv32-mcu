@@ -1,5 +1,5 @@
 `timescale 1ns / 10ps
-
+`include "D:/vivado-projects/project_3/project_3.srcs/sources_1/imports/source/header.sv"
 module sync #(
     parameter RST_VAL=0
 ) (
@@ -11,7 +11,6 @@ module sync #(
 
     //flip flop logic - if n_rst is low assert to RST_VAL, otherwise propagate the input signal
 `ifdef vivado
-    logic ff_1 = RST_VAL, ff_2 = RST_VAL;
     initial begin
         ff_1 = RST_VAL;
         ff_2 = RST_VAL;

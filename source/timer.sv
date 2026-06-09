@@ -1,5 +1,5 @@
 `timescale 1ns / 10ps
-
+`include "D:/vivado-projects/project_3/project_3.srcs/sources_1/imports/source/header.sv"
 module timer (
   input logic clk, input logic n_rst, enable_timer,
   input logic [13:0] bit_period,
@@ -7,7 +7,7 @@ module timer (
   output logic shift_strobe, packet_done  
 );
     logic r_flag1, r_flag2, r_flag3;
-    flex_counter #(.SIZE(4)) f1(.clk(clk), .n_rst(n_rst), .clear(~enable_timer), .rollover_val(4'h3), .count_enable(~r_flag1), .rollover_flag(r_flag1));
+    flex_counter #(.SIZE(13)) f1(.clk(clk), .n_rst(n_rst), .clear(~enable_timer), .rollover_val(bit_period[13:1]), .count_enable(~r_flag1), .rollover_flag(r_flag1));
     flex_counter #(.SIZE(14)) f2(.clk(clk), .n_rst(n_rst), .clear(~enable_timer), .rollover_val(bit_period), .count_enable(r_flag1), .rollover_flag(r_flag2));
     flex_counter #(.SIZE(5)) f3(.clk(clk), .n_rst(n_rst), .clear(~enable_timer), .rollover_val({'0, data_size + 4'b0001}), .count_enable(r_flag2), .rollover_flag(r_flag3));
 

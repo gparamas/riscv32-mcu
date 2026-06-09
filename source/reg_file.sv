@@ -1,5 +1,5 @@
 `timescale 1ns / 10ps
-
+`include "D:/vivado-projects/project_3/project_3.srcs/sources_1/imports/source/header.sv"
 module reg_file #(
     // parameters
 ) (
@@ -13,7 +13,6 @@ module reg_file #(
     logic [31:0][31:0] n_regfile;
 
 `ifdef vivado
-    logic [31:0][31:0] regfile = '0;
     initial begin
         regfile = '0;
     end

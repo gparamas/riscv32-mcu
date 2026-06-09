@@ -1,5 +1,5 @@
 `timescale 1ns / 10ps
-
+`include "D:/vivado-projects/project_3/project_3.srcs/sources_1/imports/source/header.sv"
 module tx_fifo #(
     // parameters
 ) (
@@ -14,8 +14,6 @@ module tx_fifo #(
     logic [4:0] write_addr, next_write_addr, read_addr, next_read_addr, tx_count, next_tx_count;
 
 `ifdef vivado
-    logic [31:0][7:0] regs = '0, next_regs;
-    logic [4:0] write_addr = '0, next_write_addr, read_addr = '0, next_read_addr, tx_count = '0, next_tx_count;
     initial begin
         regs = '0;
         write_addr = '0;

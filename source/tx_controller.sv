@@ -1,5 +1,5 @@
 `timescale 1ns / 10ps
-
+`include "D:/vivado-projects/project_3/project_3.srcs/sources_1/imports/source/header.sv"
 module tx_controller #(
     // parameters
 ) (
@@ -15,7 +15,6 @@ module tx_controller #(
     state_t state, next_state;
 
 `ifdef vivado
-    state_t state = IDLE, next_state;
     initial begin
         state = IDLE;
     end

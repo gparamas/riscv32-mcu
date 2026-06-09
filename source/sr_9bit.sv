@@ -1,5 +1,5 @@
 `timescale 1ns / 10ps
-
+`include "D:/vivado-projects/project_3/project_3.srcs/sources_1/imports/source/header.sv"
 module sr_9bit (
     input logic clk, input logic n_rst, shift_strobe, serial_in,
     output logic [7:0] packet_data,

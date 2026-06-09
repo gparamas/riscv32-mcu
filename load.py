@@ -1,7 +1,7 @@
 import serial
 import numpy as np
 
-s = serial.Serial('COM11', 10000000, timeout=1)
+s = serial.Serial('COM11', 1000000, timeout=1)
 
 
 code = np.fromfile("main.bin", dtype=np.uint32)
@@ -15,8 +15,8 @@ for x in code:
         s.write(bytes([(x >> (i * 8)) & 0xFF]))
 
 while True:
-    data = s.readline(1)
+    data = s.read(1)
     if(data):
-        print(data.hex())
+        print(int.from_bytes(data, 'little'))
     else:
         print("nothing received")
