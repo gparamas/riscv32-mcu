@@ -76,6 +76,7 @@ import types::*;
     decoder d1(
         .clk(clk), .n_rst(n_rst),
         .instr(instr),
+        .mmio_stall(mmio_stall),
         .funct3(funct3), 
         .rs1(rs1), .rs2(rs2), .rd(rd),
         .flush(((take_branch && id_ex[8]) || id_ex[9] || id_ex[10])),
@@ -96,10 +97,10 @@ import types::*;
 
 
     always_comb begin
-        if(stall || ~en) begin
+        if(mmio_stall || ~en) begin
             next_id_ex = id_ex;
         end
-        else if(((take_branch && id_ex[8]) || id_ex[9] || id_ex[10])) begin
+        else if(((take_branch && id_ex[8]) || id_ex[9] || id_ex[10] || load_stall)) begin
             next_id_ex = '0;
         end
         else begin

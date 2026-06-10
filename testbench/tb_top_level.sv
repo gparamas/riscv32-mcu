@@ -49,7 +49,7 @@ module tb_top_level ();
         $fclose(fptr);
     end
 
-    logic [7:0] uart_out;
+    logic [7:0] uart_out, uart_compiled;
 
     task send_packet;
         input [7:0] data;
@@ -92,8 +92,9 @@ module tb_top_level ();
                 #(data_period * CLK_PERIOD);
                 uart_out[i] = uart_tx;
             end
-
             #(data_period * CLK_PERIOD);
+            uart_compiled = uart_out;
+
         end
     endtask
 
@@ -102,20 +103,26 @@ module tb_top_level ();
     int i, j;
     initial begin
         uart_rx = 1'b1;
-        uart_out = 0;
+        uart_out = '1;
+        uart_compiled = '1;
         
         n_rst = 1;
 
         reset_dut;
     
-
-        for(i = 0; i < size / 4; i++) begin
-            for(j = 0; j < 4; j++) begin
-                send_packet(imem[i][8*j +: 8], 1, 8, 100);
-            end
-        end
         fork
-            repeat(5000) @(posedge clk);
+            wait(DUT.pr_en == 1'b1);
+            begin
+                for(i = 0; i < size / 4; i++) begin
+                    for(j = 0; j < 4; j++) begin
+                        send_packet(imem[i][8*j +: 8], 1, 8, 100);
+                    end
+                end
+            end
+        join_any
+        disable fork;
+        fork
+            repeat(20000) @(posedge clk);
             begin
                 for(;;) begin
                     check_tx(100);
