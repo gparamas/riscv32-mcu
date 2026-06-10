@@ -28,11 +28,13 @@ module decoder
         prd = '0;
         prd2 = '0;
         prev_instr_type = IDLE;
+        pstall = 1'b0;
     end
     always_ff@(posedge clk) begin
-            prd <= flush ? '0 : rd & {5{instr_type != BRANCH && instr_type != STORE}};
-            prd2 <= flush ? '0 : prd;  
-            prev_instr_type <= instr_type;
+            prd <= mmio_stall || load_stall ? prd : (flush ? '0 : rd & {5{instr_type != BRANCH && instr_type != STORE}});
+            prd2 <= mmio_stall || load_stall ? prd2 : (flush ? '0 : prd);  
+            prev_instr_type <= mmio_stall || load_stall ? prev_instr_type : instr_type;
+            pstall <= load_stall;
     end
 `else
     always_ff@(posedge clk, negedge n_rst) begin
