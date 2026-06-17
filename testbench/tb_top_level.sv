@@ -179,7 +179,7 @@ module tb_top_level ();
     
     initial begin
         imem = '{default: 0};
-        fptr = $fopen("D:/vivado-projects/project_3/project_3.srcs/sim_1/imports/riscv32-mcu/main.bin", "rb");
+        fptr = $fopen("D:/riscv32-mcu/main.bin", "rb");
         size = $fread(imem, fptr);
         foreach (imem[i])
             imem[i] = {<<8{imem[i]}};
@@ -215,6 +215,7 @@ module tb_top_level ();
             #(data_period * CLK_PERIOD_INTERNAL);
         end
     endtask
+    logic [7:0] uart_compiled;
 
     task check_tx;
         input int data_period;
@@ -230,6 +231,7 @@ module tb_top_level ();
                 uart_out[i] = uart_tx;
             end
 
+            uart_compiled = uart_out;
             #(data_period * CLK_PERIOD_INTERNAL);
         end
     endtask
@@ -240,19 +242,26 @@ module tb_top_level ();
     initial begin
         uart_rx = 1'b1;
         uart_out = 0;
+        uart_compiled = '1;
         
         n_rst = 1;
         @(posedge DUT.clk_out);
     
 
-        for(i = 0; i < size / 4; i++) begin
-            for(j = 0; j < 4; j++) begin
-                curr_instr = imem[i];
-                send_packet(imem[i][8*j +: 8], 1, 8, 100);
-            end
-        end
         fork
-            repeat(5000) @(posedge DUT.clk_out);
+            wait(DUT.pr_en == 1'b1);
+            begin
+                for(i = 0; i < size / 4; i++) begin
+                    curr_instr = imem[i];
+                    for(j = 0; j < 4; j++) begin
+                        send_packet(imem[i][8*j +: 8], 1, 8, 100);
+                    end
+                end
+            end
+        join_any
+        disable fork;
+        fork
+            repeat(20000) @(posedge DUT.clk_out);
             begin
                 for(;;) begin
                     check_tx(100);

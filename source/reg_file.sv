@@ -9,15 +9,17 @@ module reg_file #(
     input logic wen, 
     output logic [31:0] rdata1, rdata2
 );
-    logic [31:0][31:0] regfile;
-    logic [31:0][31:0] n_regfile;
+    logic [31:0] regfile [31:0];
+    //logic [31:0][31:0] n_regfile;
 
 `ifdef vivado
     initial begin
-        regfile = '0;
+        regfile = '{default: 0};
     end
     always_ff@(posedge clk) begin
-        regfile <= n_regfile;
+        if(wen && rd != '0) begin
+            regfile[rd] <= wdata; 
+        end
     end
 `else
     always_ff@(posedge clk, negedge n_rst) begin
@@ -29,16 +31,17 @@ module reg_file #(
     end
 `endif
 
-    always_comb begin
-        n_regfile = regfile;
-        if(wen) begin
-	        n_regfile[rd] = wdata;
-        end
-        n_regfile[0] = '0;
-    end
+//    always_comb begin
+//        n_regfile = regfile;
+//        n_regfile = regfile;
+//        if(wen) begin
+//	        n_regfile[rd] = wdata;
+//        end
+//        n_regfile[0] = '0;
+//    end
 
-    assign rdata1 = regfile[rs1];
-    assign rdata2 = regfile[rs2];
+    assign rdata1 = rs1 == '0 ? '0 : regfile[rs1];
+    assign rdata2 = rs2 == '0 ? '0 : regfile[rs2];
 
 
 

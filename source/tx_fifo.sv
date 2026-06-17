@@ -10,18 +10,20 @@ module tx_fifo #(
     output logic [7:0] tx_data_out
 );
 
-    logic [31:0][7:0] regs, next_regs;
+    (* ram_style = "distributed" *) logic [7:0] regs [31:0];
     logic [4:0] write_addr, next_write_addr, read_addr, next_read_addr, tx_count, next_tx_count;
 
 `ifdef vivado
     initial begin
-        regs = '0;
+        regs = '{default: 0};
         write_addr = '0;
         read_addr = '0;
         tx_count = '0;
     end
     always_ff@(posedge clk) begin
-        regs <= next_regs;
+        if(load && ~tx_full) begin 
+            regs[write_addr] <= tx_data_in;
+        end
         write_addr <= next_write_addr;
         read_addr <= next_read_addr;
         tx_count <= next_tx_count;
@@ -43,10 +45,8 @@ module tx_fifo #(
 `endif
 
     always_comb begin: REGS_AND_WRITE_ADDR
-        next_regs = regs;
         next_write_addr = write_addr;
         if(load && ~tx_full) begin
-            next_regs[write_addr] = tx_data_in;
             next_write_addr = write_addr == 5'h1F ? '0 : write_addr + 1;
         end
     end
