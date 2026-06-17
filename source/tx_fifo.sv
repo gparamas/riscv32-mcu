@@ -31,12 +31,14 @@ module tx_fifo #(
 `else
     always_ff@(posedge clk, negedge n_rst) begin
         if(~n_rst) begin
-            regs <= '0;
+            regs <= '{default: 0};
             write_addr <= '0;
             read_addr <= '0;
             tx_count <= '0;
         end else begin
-            regs <= next_regs;
+            if(load && ~tx_full) begin 
+                regs[write_addr] <= tx_data_in;
+            end
             write_addr <= next_write_addr;
             read_addr <= next_read_addr;
             tx_count <= next_tx_count;

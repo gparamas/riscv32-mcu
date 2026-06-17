@@ -157,7 +157,7 @@ import types::*;
 
     assign reg_wdata = ex_mem[0] ? mem_rdata : ex_mem[37:6];
 
-    assign next_mem_wb = (stall || ~en )? mem_wb : reg_wdata;
+    assign next_mem_wb = (mmio_stall || ~en )? mem_wb : reg_wdata;
     
 `ifdef vivado
     initial begin
