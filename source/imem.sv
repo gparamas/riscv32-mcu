@@ -10,7 +10,7 @@ module imem #(
     output logic [31:0] rdata
 );
 
-    logic [31:0] ram_rdata;
+    logic [31:0] ram_rdata, store_rdata;
     logic pstall, pren;
     
     
@@ -18,19 +18,23 @@ module imem #(
     initial begin
          pstall = '0;
          pren = '0;
+         store_rdata = '0;
     end
     always_ff@(posedge clk) begin
         pstall <= stall;
         pren <= ren;
+        store_rdata <= pren ? ram_rdata : store_rdata;
     end
 `else
     always_ff@(posedge clk, negedge n_rst) begin
         if(~n_rst) begin
             pstall <= '0;
             pren <= '0;
+            store_rdata <= '0;
         end else begin
             pstall <= stall;
             pren <= ren;
+            store_rdata <= pren ? ram_rdata : store_rdata;
         end
     end
 `endif
@@ -46,7 +50,7 @@ module imem #(
         .rdata(ram_rdata)
     );
 
-    assign rdata = (pren || pstall) ? ram_rdata : '0;
+    assign rdata = pren ? ram_rdata : (pstall ? store_rdata : '0);
 
     
 

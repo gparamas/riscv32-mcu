@@ -16,16 +16,16 @@ module ram #(
         rdata = '0;
     end
     always_ff@(posedge clk) begin
-        if (ren) begin rdata <= ram[raddr]; end
         if (wen) begin ram[waddr] <= wdata; end
+        rdata <= ram[raddr];
     end
 `else
     always_ff@(posedge clk, negedge n_rst) begin
         if(~n_rst) begin
             rdata <= '0;
         end else begin
-            if (ren) begin rdata <= ram[raddr]; end
             if (wen) begin ram[waddr] <= wdata; end
+            rdata <= ram[raddr];
         end
     end
 `endif
