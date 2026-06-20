@@ -1,9 +1,11 @@
 `timescale 1ns / 10ps
 //`include "D:/vivado-projects/project_3/project_3.srcs/sources_1/imports/source/header.sv"
 module flex_counter #(
-        SIZE = 8
+        SIZE = 8,
+        POS = 1,
+        CE = 0
     ) (
-        input logic clk, input logic n_rst,
+        input logic clk, input logic n_rst, ce,
         input logic clear, count_enable,
         input logic [SIZE-1:0] rollover_val,
         output logic [SIZE-1:0] count_out,
@@ -22,13 +24,26 @@ module flex_counter #(
         {count_out , rollover_flag} <= {n_c_out, n_r_flag};
     end
 `else
-    always_ff@(posedge clk, negedge n_rst) begin
-        if(~n_rst) begin
-            {count_out, rollover_flag} <= (SIZE + 1)'('b0);
-        end else begin
-            {count_out , rollover_flag} <= {n_c_out, n_r_flag};
+    generate
+        if(POS) begin
+            always_ff@(posedge clk, negedge n_rst) begin
+                if(~n_rst) begin
+                    {count_out, rollover_flag} <= (SIZE + 1)'('b0);
+                end else begin
+                    {count_out , rollover_flag} <= CE ? (ce ? {n_c_out, n_r_flag} : {count_out, rollover_flag}) : {count_out, rollover_flag};
+                end
+            end
         end
-    end
+        else begin
+            always_ff@(negedge clk, negedge n_rst) begin
+                if(~n_rst) begin
+                    {count_out, rollover_flag} <= (SIZE + 1)'('b0);
+                end else begin
+                    {count_out , rollover_flag} <= CE ? (ce ? {n_c_out, n_r_flag} : {count_out, rollover_flag}) : {count_out, rollover_flag};
+                end
+            end
+        end
+    endgenerate
 `endif
 
     always_comb begin

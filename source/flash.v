@@ -25,7 +25,7 @@
 // *============================================================================================== 
 // * timescale define
 // *============================================================================================== 
-`timescale 1ns / 100ps
+`timescale 1ns / 10ps
 
 // *============================================================================================== 
 // * product parameter define
@@ -122,7 +122,7 @@ module flash( SCLK,
                 tRCE            = 12_000_000,     // reset time from erase
                 tHHQX           = `LVR ? 10 : 8,    // HOLD to Output Low-z
                 tHLQZ           = `LVR ? 10 : 8,    // HOLD to Output High-z
-                tVSL            = 800_000;     // Time delay to chip select allowed
+                tVSL            = 0;     // Time delay to chip select allowed
 
     parameter   tESL            = 20_000,       // delay after erase suspend command
                 tPSL            = 20_000,       // delay after program suspend command

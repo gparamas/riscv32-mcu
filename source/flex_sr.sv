@@ -2,9 +2,11 @@
 //`include "D:/vivado-projects/project_3/project_3.srcs/sources_1/imports/source/header.sv"
 module flex_sr #(
     parameter SIZE = 8,
-    parameter MSB_FIRST = 0
+    parameter MSB_FIRST = 0,
+    parameter POS = 1,
+    parameter CE = 0
 ) (
-    input logic clk, input logic n_rst, shift_enable, serial_in, load_enable,
+    input logic clk, input logic n_rst, shift_enable, serial_in, load_enable, ce,
     input logic [SIZE - 1:0] parallel_in, 
     output logic [SIZE - 1:0] parallel_out,
     output logic serial_out
@@ -17,13 +19,27 @@ module flex_sr #(
     end
 `else
     logic [SIZE-1:0] Q, next_Q;
-    always_ff@(posedge clk, negedge n_rst) begin
-        if(~n_rst) begin
-            Q <= '1;
-        end else begin
-            Q <= next_Q;
+
+    generate
+        if(POS) begin
+            always_ff@(posedge clk, negedge n_rst) begin
+                if(~n_rst) begin
+                    Q <= '1;
+                end else begin
+                    Q <= CE ? (ce ? next_Q : Q) : next_Q;
+                end
+            end
         end
-    end
+        else begin
+            always_ff@(negedge clk, negedge n_rst) begin
+                if(~n_rst) begin
+                    Q <= '1;
+                end else begin
+                    Q <= CE ? (ce ? next_Q : Q) : next_Q;
+                end
+            end
+        end
+    endgenerate
 `endif
     
     always_comb begin
