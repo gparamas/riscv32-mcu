@@ -191,6 +191,25 @@ module tb_qspi_test ();
         end
     endtask
 
+    task send_rdscur;
+        input int read_times;   
+        int i;
+        begin
+            send_cmd(32'h2B, 32'h0, read_times);
+            check_cmd(8'h2B);
+            if(read_times == 32'hFFFFFFFF) begin
+                for(;;) begin
+                    @(negedge clk);
+                    if(reset) break;
+                end
+            end else begin
+                for(i = 0; i < read_times; i++) begin
+                    repeat(8) @(negedge clk);
+                end
+            end
+        end
+    endtask
+
     task send_wrsr;
         input logic [7:0] sr;
         input logic [7:0] cr;
@@ -213,17 +232,22 @@ module tb_qspi_test ();
     task send_4read;
         input logic [23:0] addr;
         input int read_times;
+        input int xip;
+        input logic [7:0] toggle;
         int i;
         begin
             fork
                 begin
-                    send_cmd(32'h11101011, 32'h2, read_times);
-                    send_word({addr, 8'h00});
-                    send_word(32'h0);
-                    wait(DUT.q1.state == READ_DATA);
-                    for(i = 0; i < read_times; i++) begin
-                        repeat(8) @(negedge clk);
+                    if(!xip) begin
+                        send_cmd(32'h11101011, 32'h2, read_times);
+                        send_word({addr, toggle});
+                        send_word(32'h0);
                     end
+                    else begin
+                        send_cmd({addr, toggle}, 32'h1, read_times);
+                        send_word(32'h0);
+                    end
+                    wait(DUT.q1.state == IDLE); 
                 end
                 
                 check_cmd(8'hEB);
@@ -232,12 +256,49 @@ module tb_qspi_test ();
         end
     endtask
 
+
     task send_wren;
     begin
             send_cmd(32'h06, 32'h0, 32'h0);
             wait(DUT.q1.state == IDLE);
     end
     endtask
+
+    task send_4pp;
+        input logic [23:0] addr;
+        input logic [7:0] items[];
+        int i;
+        begin
+            send_cmd(32'h00111000, ((items.size() - 1) / 4) + 1, 32'h0);
+            send_word({addr, items[0]});
+            for (i = 1; i < items.size(); i=i+4) begin
+                send_word({items[i], items[i+1], items[i+2], items[i+3]});
+            end
+            wait(DUT.q1.state == IDLE);
+        end
+    endtask
+
+    task send_burstread;
+        input logic [7:0] mode;
+        begin
+           send_cmd(32'hC0, 1, 0); 
+           send_byte(mode);
+           wait(DUT.q1.state == IDLE);
+        end
+    endtask
+
+    task send_se;
+        input logic [23:0] addr;
+        begin
+            send_cmd({32'h20}, 3, 0);
+            send_byte(addr[23:16]);
+            send_byte(addr[15:8]);
+            send_byte(addr[7:0]);
+            wait(DUT.q1.state == IDLE);
+        end
+    endtask
+
+    
 
     initial begin
         n_rst = 1;
@@ -256,8 +317,8 @@ module tb_qspi_test ();
         fork
             send_rdsr(32'hFFFFFFFF);
             begin
-                wait(rdata == 32'h3);
-                wait(rdata != 32'h3);
+                wait(rdata[0] == 1'b1);
+                wait(rdata[0] != 1'b1);
                 reset = 1'b1;
                 @(negedge clk);
                 @(posedge clk);
@@ -267,8 +328,73 @@ module tb_qspi_test ();
 
         repeat(5) @(posedge clk);
 
-        send_4read(24'h0, 10);
+        send_4read(24'h0, 10, 0, 8'h0);
+
+        repeat(5) @(posedge clk);
+
+        send_wren();
+
+        repeat(5) @(posedge clk);
         
+        send_4pp(24'h0, '{8'h0, 8'h0, 8'h0, 8'h0, 8'h0, 8'hEE, 8'hBB, 8'hCC, 8'hDD});
+
+        repeat(5) @(posedge clk);
+
+
+        fork
+            send_rdsr(32'hFFFFFFFF);
+            begin
+                wait(rdata[0] == 1'b1);
+                wait(rdata[0] != 1'b1);
+                reset = 1'b1;
+                @(negedge clk);
+                @(posedge clk);
+                reset = 1'b0;
+            end
+        join
+
+        repeat(5) @(posedge clk);
+
+        send_rdscur(1);
+
+        repeat(5) @(posedge clk);
+        
+        send_burstread(8'h02);
+
+        repeat(5) @(posedge clk);
+
+        send_4read(24'h0, 12, 0, 8'h0F);
+        
+        repeat(5) @(posedge clk);
+
+        send_4read(24'h0, 12, 1, 8'hFF);
+
+        repeat(5) @(posedge clk);
+
+        send_wren();
+
+        repeat(5) @(posedge clk);
+
+        send_se(24'h0);
+
+        repeat(5) @(posedge clk);
+
+        fork
+            send_rdsr(32'hFFFFFFFF);
+            begin
+                wait(rdata[0] == 1'b1);
+                wait(rdata[0] != 1'b1);
+                reset = 1'b1;
+                @(negedge clk);
+                @(posedge clk);
+                reset = 1'b0;
+            end
+        join
+
+        repeat(5) @(posedge clk);
+
+        send_4read(24'h0, 12, 0, 8'h0F);
+
         repeat(10) @(posedge clk);
 
 

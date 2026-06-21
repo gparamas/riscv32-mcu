@@ -37,12 +37,16 @@ module qspi_fsm #(
     logic sio1_out, sio2_out, sio3_out, sio4_out;
     logic single_or_quad, n_single_or_quad; 
 
+    logic start_xip, n_start_xip;
+
+    assign n_start_xip = state == GET_SEND_NUM ? write_data == 32'h11101011 : start_xip;
+
     logic n_ce;
     assign n_ce = (~single_or_quad) ? ~ce : 1'b1;
     assign cen = ~single_or_quad;
 
 
-    assign n_single_or_quad = state == GET_SEND_NUM ? write_data == 32'h11101011 || write_data == 32'h38 : single_or_quad; 
+    assign n_single_or_quad = state == GET_SEND_NUM ? write_data == 32'h11101011 || write_data == 32'h00111000 || write_data[3:0] == 4'hF: single_or_quad; 
 
     logic [3:0][7:0] sr_out;
     assign rdata = read_data;
@@ -56,6 +60,7 @@ module qspi_fsm #(
             read_num <= '0;
             ce <= 1'b1;
             single_or_quad <= 1'b0;
+            start_xip <= 1'b0;
         end else begin
             if(reset) begin
                 state <= IDLE;
@@ -65,6 +70,7 @@ module qspi_fsm #(
                 read_num <= '0;
                 ce <= 1'b1;
                 single_or_quad <= 1'b0;
+                start_xip <= 1'b0;
             end else begin
                 ce <= n_ce;
                 if(ce) begin
@@ -74,6 +80,7 @@ module qspi_fsm #(
                     send_num <= n_send_num;
                     read_num <= n_read_num;
                     single_or_quad <= n_single_or_quad;
+                    start_xip <= n_start_xip;
                 end
             end
         end
@@ -145,6 +152,8 @@ module qspi_fsm #(
             end
             WAIT_COMMAND: begin
                 rw1 = 1'b1;
+                rw2 = write_data[3:0] == 4'hF;
+                rw3 = write_data[3:0] == 4'hF;
                 cs = 1'b0;
                 shift_en = 1'b1;
                 ctr_en = 1'b1;
@@ -166,8 +175,8 @@ module qspi_fsm #(
             end
             SEND_DATA: begin
                 rw1 = 1'b1;
-                rw2 = 1'b1;
-                rw3 = 1'b1;
+                rw2 = ~start_xip;
+                rw3 = ~start_xip;
                 cs = 1'b0;
                 load_en = 1'b1;
                 ctr_en = 1'b1;
