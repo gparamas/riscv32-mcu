@@ -21,7 +21,7 @@ module flex_sr #(
     logic [SIZE-1:0] Q, next_Q;
 
     generate
-        if(POS) begin
+        if(POS) begin: gen_CLK_POS
             always_ff@(posedge clk, negedge n_rst) begin
                 if(~n_rst) begin
                     Q <= '1;
@@ -30,7 +30,7 @@ module flex_sr #(
                 end
             end
         end
-        else begin
+        else begin: gen_CLK_NEG
             always_ff@(negedge clk, negedge n_rst) begin
                 if(~n_rst) begin
                     Q <= '1;

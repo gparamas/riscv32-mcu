@@ -5,12 +5,12 @@ module qspi_fsm #(
 ) (
     input logic clk, n_rst,
     input logic [31:0] wdata, 
-    input logic empty, full,
+    input logic empty,
     input logic reset,
     inout wire sio1, sio2, sio3, sio4,
     output logic cs, ce, cen,
     output logic [31:0] rdata,
-    output logic data_ready, done
+    output logic data_ready, done, underrun
 );
 
     typedef enum logic [3:0] {
@@ -125,6 +125,7 @@ module qspi_fsm #(
         done = 1'b0;
         ctr_en = 1'b0;
         ctr_clear = 1'b1;
+        underrun = 1'b0;
 
         case(state) 
             IDLE: begin
@@ -135,14 +136,18 @@ module qspi_fsm #(
                 end
             end
             GET_SEND_NUM: begin
-                n_read_num = wdata;
-                done = 1'b1;
-                n_state = GET_READ_NUM;
+                if(~empty) begin
+                    n_read_num = wdata;
+                    done = 1'b1;
+                    n_state = GET_READ_NUM;
+                end
             end
             GET_READ_NUM: begin
-                n_send_num = wdata;
-                done = 1'b1;
-                n_state = SEND_COMMAND;
+                if(~empty) begin
+                    n_send_num = wdata;
+                    done = 1'b1;
+                    n_state = SEND_COMMAND;
+                end
             end
             SEND_COMMAND: begin
                 load_en = 1'b1;
@@ -158,11 +163,16 @@ module qspi_fsm #(
                 shift_en = 1'b1;
                 ctr_en = 1'b1;
                 ctr_clear = 1'b0;
-                if(count_out == 3'h7) begin
+                if(count_out == 4'h7) begin
                     if(|send_num) begin
-                        n_write_data = wdata;
-                        done = 1'b1;
-                        n_state = SEND_DATA;
+                        if(empty) begin
+                            underrun = 1'b1;
+                            n_state = IDLE;
+                        end else begin
+                            n_write_data = wdata;
+                            done = 1'b1;
+                            n_state = SEND_DATA;
+                        end
                     end
                 end
                 if(rollover_flag) begin
@@ -191,13 +201,19 @@ module qspi_fsm #(
                 shift_en = 1'b1;
                 ctr_en = 1'b1;
                 ctr_clear = 1'b0;
-                if(count_out == 3'h1) begin
+                if(count_out == 4'h1) begin
                     n_send_num = send_num - 1;
                 end
-                if(count_out == 3'h6) begin
+                if(count_out == 4'h6) begin
                     if(|send_num) begin
-                        n_write_data = wdata;
-                        done = 1'b1;
+                        if(empty) begin
+                            underrun = 1'b1;
+                            n_state = IDLE;
+                        end
+                        else begin
+                            n_write_data = wdata;
+                            done = 1'b1;
+                        end
                     end
                 end
                 if(rollover_flag) begin
@@ -243,6 +259,7 @@ module qspi_fsm #(
                     n_state = IDLE;
                 end
             end
+            default: n_state = IDLE;
         endcase
     end
 

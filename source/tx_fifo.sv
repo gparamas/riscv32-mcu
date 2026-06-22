@@ -2,16 +2,20 @@
 //`include "D:/vivado-projects/project_3/project_3.srcs/sources_1/imports/source/header.sv"
 module tx_fifo #(
     // parameters
+    parameter int DEPTH = 32,
+    parameter int WIDTH = 8,
+    parameter CE = 0
 ) (
     input logic clk, input logic n_rst,
-    input logic [7:0] tx_data_in,
+    input logic [WIDTH-1:0] tx_data_in,
     input logic load, done,
+    input logic ce,
     output logic tx_full, tx_empty,
-    output logic [7:0] tx_data_out
+    output logic [WIDTH-1:0] tx_data_out
 );
 
-    (* ram_style = "distributed" *) logic [7:0] regs [31:0];
-    logic [4:0] write_addr, next_write_addr, read_addr, next_read_addr, tx_count, next_tx_count;
+    (* ram_style = "distributed" *) logic [WIDTH - 1:0] regs [DEPTH - 1:0];
+    logic [$clog2(DEPTH) - 1:0] write_addr, next_write_addr, read_addr, next_read_addr, tx_count, next_tx_count;
 
 `ifdef vivado
     initial begin
@@ -36,12 +40,24 @@ module tx_fifo #(
             read_addr <= '0;
             tx_count <= '0;
         end else begin
-            if(load && ~tx_full) begin 
-                regs[write_addr] <= tx_data_in;
+            if(CE) begin
+                if(ce) begin
+                    if(load && ~tx_full) begin 
+                        regs[write_addr] <= tx_data_in;
+                    end
+                    write_addr <= next_write_addr;
+                    read_addr <= next_read_addr;
+                    tx_count <= next_tx_count;
+                end
             end
-            write_addr <= next_write_addr;
-            read_addr <= next_read_addr;
-            tx_count <= next_tx_count;
+            else begin
+                if(load && ~tx_full) begin 
+                    regs[write_addr] <= tx_data_in;
+                end
+                write_addr <= next_write_addr;
+                read_addr <= next_read_addr;
+                tx_count <= next_tx_count;
+            end
         end
     end
 `endif
@@ -49,14 +65,14 @@ module tx_fifo #(
     always_comb begin: REGS_AND_WRITE_ADDR
         next_write_addr = write_addr;
         if(load && ~tx_full) begin
-            next_write_addr = write_addr == 5'h1F ? '0 : write_addr + 1;
+            next_write_addr = write_addr == '1 ? '0 : write_addr + 1;
         end
     end
 
     always_comb begin: READ_ADDR
         next_read_addr = read_addr;
         if(done) begin
-            next_read_addr = read_addr == 5'h1F ? '0 : read_addr + 1;
+            next_read_addr = read_addr == '1 ? '0 : read_addr + 1;
         end
     end
 

@@ -11,11 +11,12 @@ module tb_qspi_test ();
     end
 
     logic clk, n_rst;
+    logic tx_empty;
     logic [31:0] wdata; 
-    logic empty, full;
+    logic empty;
     logic reset;
     logic [31:0] rdata;
-    logic data_ready, done;
+    logic data_ready, done, underrun;
 
     // clockgen
     always begin
@@ -40,7 +41,7 @@ module tb_qspi_test ();
 
     qspi_test #() DUT (.*);
 
-
+    string test;
     logic [7:0] received_cmd;
 
     typedef enum logic [3:0] {
@@ -104,6 +105,7 @@ module tb_qspi_test ();
         input logic [31:0] cmd;
         input logic [31:0] send_num;
         input logic [31:0] read_num;
+        input int last;
         begin
             @(negedge clk);
             while(~DUT.q1.ce) 
@@ -125,12 +127,19 @@ module tb_qspi_test ();
                 @(negedge clk);
             @(posedge clk);
             wdata = send_num;
-            empty = 1'b1;
+
+            if(last) begin
+                @(negedge clk);
+                while(~DUT.q1.ce) 
+                    @(negedge clk);
+                empty = 1'b1;
+            end
         end
     endtask
 
     task send_byte;
         input byte data;
+        input int last;
         begin
             wait(done);
             @(negedge clk);
@@ -138,11 +147,21 @@ module tb_qspi_test ();
                 @(negedge clk);
             @(posedge clk);
             wdata = {24'b0, data};
+
+            if(last) begin
+                wait(done);
+                $display("penis: %d\n", last);
+                @(negedge clk);
+                while(~DUT.q1.ce) 
+                    @(negedge clk);
+                empty = 1'b1;
+            end
         end
     endtask
 
     task send_word;
         input logic [31:0] data;
+        input int last;
         begin
             wait(done);
             @(negedge clk);
@@ -150,6 +169,14 @@ module tb_qspi_test ();
                 @(negedge clk);
             @(posedge clk);
             wdata = data;
+
+           if(last) begin
+                wait(done);
+                @(negedge clk);
+                while(~DUT.q1.ce) 
+                    @(negedge clk);
+                empty = 1'b1;
+            end
         end
     endtask
 
@@ -176,7 +203,7 @@ module tb_qspi_test ();
         input int read_times;   
         int i;
         begin
-            send_cmd(32'h05, 32'h0, read_times);
+            send_cmd(32'h05, 32'h0, read_times, 1);
             check_cmd(8'h05);
             if(read_times == 32'hFFFFFFFF) begin
                 for(;;) begin
@@ -195,7 +222,7 @@ module tb_qspi_test ();
         input int read_times;   
         int i;
         begin
-            send_cmd(32'h2B, 32'h0, read_times);
+            send_cmd(32'h2B, 32'h0, read_times, 1);
             check_cmd(8'h2B);
             if(read_times == 32'hFFFFFFFF) begin
                 for(;;) begin
@@ -216,9 +243,12 @@ module tb_qspi_test ();
         begin
             fork
                 begin
-                    send_cmd(32'h01, 2, 0);
-                    send_byte(sr);
-                    send_byte(cr);
+                    send_cmd(32'h01, 2, 0, 0);
+                    test = "a";
+                    send_byte(sr, 0);
+                    test = "b";
+                    send_byte(cr, 1);
+                    test = "c";
                 end
                 begin
                     check_cmd(8'h01);
@@ -239,13 +269,13 @@ module tb_qspi_test ();
             fork
                 begin
                     if(!xip) begin
-                        send_cmd(32'h11101011, 32'h2, read_times);
-                        send_word({addr, toggle});
-                        send_word(32'h0);
+                        send_cmd(32'h11101011, 32'h2, read_times, 0);
+                        send_word({addr, toggle}, 0);
+                        send_word(32'h0, 1);
                     end
                     else begin
-                        send_cmd({addr, toggle}, 32'h1, read_times);
-                        send_word(32'h0);
+                        send_cmd({addr, toggle}, 32'h1, read_times, 0);
+                        send_word(32'h0, 1);
                     end
                     wait(DUT.q1.state == IDLE); 
                 end
@@ -258,8 +288,8 @@ module tb_qspi_test ();
 
 
     task send_wren;
-    begin
-            send_cmd(32'h06, 32'h0, 32'h0);
+    begin   
+            send_cmd(32'h06, 32'h0, 32'h0, 1);
             wait(DUT.q1.state == IDLE);
     end
     endtask
@@ -269,10 +299,10 @@ module tb_qspi_test ();
         input logic [7:0] items[];
         int i;
         begin
-            send_cmd(32'h00111000, ((items.size() - 1) / 4) + 1, 32'h0);
-            send_word({addr, items[0]});
+            send_cmd(32'h00111000, ((items.size() - 1) / 4) + 1, 32'h0, 0);
+            send_word({addr, items[0]}, 0);
             for (i = 1; i < items.size(); i=i+4) begin
-                send_word({items[i], items[i+1], items[i+2], items[i+3]});
+                send_word({items[i], items[i+1], items[i+2], items[i+3]}, (i + 4) >= items.size() ? 1 : 0);
             end
             wait(DUT.q1.state == IDLE);
         end
@@ -281,19 +311,19 @@ module tb_qspi_test ();
     task send_burstread;
         input logic [7:0] mode;
         begin
-           send_cmd(32'hC0, 1, 0); 
-           send_byte(mode);
-           wait(DUT.q1.state == IDLE);
+            send_cmd(32'hC0, 1, 0, 0); 
+            send_byte(mode, 1);
+            wait(DUT.q1.state == IDLE);
         end
     endtask
 
     task send_se;
         input logic [23:0] addr;
         begin
-            send_cmd({32'h20}, 3, 0);
-            send_byte(addr[23:16]);
-            send_byte(addr[15:8]);
-            send_byte(addr[7:0]);
+            send_cmd({32'h20}, 3, 0, 0);
+            send_byte(addr[23:16], 0);
+            send_byte(addr[15:8], 0);
+            send_byte(addr[7:0], 1);
             wait(DUT.q1.state == IDLE);
         end
     endtask
@@ -303,7 +333,6 @@ module tb_qspi_test ();
     initial begin
         n_rst = 1;
         empty = 1'b1;
-        full = 1'b0;
         reset = 1'b0;
         wdata = '0;
 

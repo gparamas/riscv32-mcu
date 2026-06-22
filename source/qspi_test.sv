@@ -5,10 +5,10 @@ module qspi_test #(
 ) (
     input logic clk, n_rst,
     input logic [31:0] wdata, 
-    input logic empty, full,
+    input logic empty,
     input logic reset,
     output logic [31:0] rdata,
-    output logic data_ready, done
+    output logic data_ready, done, underrun
 
 );
 
@@ -16,7 +16,7 @@ module qspi_test #(
     logic cs;
     logic ce, cen;
 
-    qspi_fsm q1(.clk(clk), .n_rst(n_rst), .ce(ce), .cen(cen), .wdata(wdata), .empty(empty), .full(full), .reset(reset), .sio1(sio1), .sio2(sio2), .sio3(sio3), .sio4(sio4), .cs(cs), .rdata(rdata), .data_ready(data_ready), .done(done));
+    qspi_fsm q1(.clk(clk), .n_rst(n_rst), .underrun(underrun), .ce(ce), .cen(cen), .wdata(wdata), .empty(empty), .reset(reset), .sio1(sio1), .sio2(sio2), .sio3(sio3), .sio4(sio4), .cs(cs), .rdata(rdata), .data_ready(data_ready), .done(done));
     flash f1(.SCLK(cen ? ce : clk), .CS(cs), .SI(sio1), .SO(sio2), .WP(sio3), .SIO3(sio4));
 
 
