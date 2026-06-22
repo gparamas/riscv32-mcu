@@ -1,6 +1,6 @@
 `timescale 1ns / 10ps
 
-module qspi_test #(
+module qspi_test_full #(
     // parameters
 ) (
     input logic clk, n_rst,
@@ -23,6 +23,7 @@ module qspi_test #(
         .psel(psel),
         .penable(penable),
         .pwrite(pwrite),
+        .paddr(paddr),
         .pwdata(pwdata),
         .prdata(prdata),
         .psaterr(psaterr),
