@@ -8,7 +8,7 @@ module qspi_fsm #(
     input logic empty,
     input logic reset,
     inout wire sio1, sio2, sio3, sio4,
-    output logic cs, ce, cen,
+    output logic cs,
     output logic [31:0] rdata,
     output logic data_ready, done, underrun, busy
 );
@@ -41,9 +41,7 @@ module qspi_fsm #(
 
     assign n_start_xip = state == GET_SEND_NUM ? write_data == 32'h11101011 : start_xip;
 
-    logic n_ce;
-    assign n_ce = (~single_or_quad) ? ~ce : 1'b1;
-    assign cen = ~single_or_quad;
+
 
 
     assign n_single_or_quad = state == GET_SEND_NUM ? write_data == 32'h11101011 || write_data == 32'h00111000 || write_data[3:0] == 4'hF: single_or_quad; 
@@ -58,7 +56,6 @@ module qspi_fsm #(
             read_data <= '0;
             send_num <= '0;
             read_num <= '0;
-            ce <= 1'b1;
             single_or_quad <= 1'b0;
             start_xip <= 1'b0;
         end else begin
@@ -68,12 +65,9 @@ module qspi_fsm #(
                 read_data <= '0;
                 send_num <= '0;
                 read_num <= '0;
-                ce <= 1'b1;
                 single_or_quad <= 1'b0;
                 start_xip <= 1'b0;
             end else begin
-                ce <= n_ce;
-                if(ce) begin
                     state <= n_state;
                     write_data <= n_write_data;
                     read_data <= n_read_data;
@@ -81,18 +75,17 @@ module qspi_fsm #(
                     read_num <= n_read_num;
                     single_or_quad <= n_single_or_quad;
                     start_xip <= n_start_xip;
-                end
             end
         end
     end
 
-    flex_sr #(.MSB_FIRST(1), .POS(0), .CE(1)) f1(.clk(clk), .n_rst(n_rst), .ce(ce), .shift_enable(shift_en), .load_enable(load_en), .parallel_in(single_or_quad ? {write_data[28], write_data[24], write_data[20], write_data[16], write_data[12], write_data[8], write_data[4], write_data[0]} : {write_data[7:0]}), .parallel_out(sr_out[0]), .serial_in(sio1), .serial_out(sio1_out));
+    flex_sr #(.MSB_FIRST(1), .POS(0)) f1(.clk(clk), .n_rst(n_rst), .shift_enable(shift_en), .load_enable(load_en), .parallel_in(single_or_quad ? {write_data[28], write_data[24], write_data[20], write_data[16], write_data[12], write_data[8], write_data[4], write_data[0]} : {write_data[7:0]}), .parallel_out(sr_out[0]), .serial_in(sio1), .serial_out(sio1_out));
 
-    flex_sr #(.MSB_FIRST(1), .POS(0), .CE(1)) f2(.clk(clk), .n_rst(n_rst), .ce(ce), .shift_enable(shift_en), .load_enable(load_en), .parallel_in({write_data[29], write_data[25], write_data[21], write_data[17], write_data[13], write_data[9], write_data[5], write_data[1]}), .parallel_out(sr_out[1]), .serial_in(sio2), .serial_out(sio2_out));
+    flex_sr #(.MSB_FIRST(1), .POS(0)) f2(.clk(clk), .n_rst(n_rst), .shift_enable(shift_en), .load_enable(load_en), .parallel_in({write_data[29], write_data[25], write_data[21], write_data[17], write_data[13], write_data[9], write_data[5], write_data[1]}), .parallel_out(sr_out[1]), .serial_in(sio2), .serial_out(sio2_out));
 
-    flex_sr #(.MSB_FIRST(1), .POS(0), .CE(1)) f3(.clk(clk), .n_rst(n_rst), .ce(ce), .shift_enable(shift_en), .load_enable(load_en), .parallel_in({write_data[30], write_data[26], write_data[22], write_data[18], write_data[14], write_data[10], write_data[6], write_data[2]}), .parallel_out(sr_out[2]), .serial_in(sio3), .serial_out(sio3_out));
+    flex_sr #(.MSB_FIRST(1), .POS(0)) f3(.clk(clk), .n_rst(n_rst), .shift_enable(shift_en), .load_enable(load_en), .parallel_in({write_data[30], write_data[26], write_data[22], write_data[18], write_data[14], write_data[10], write_data[6], write_data[2]}), .parallel_out(sr_out[2]), .serial_in(sio3), .serial_out(sio3_out));
 
-    flex_sr #(.MSB_FIRST(1), .POS(0), .CE(1)) f4(.clk(clk), .n_rst(n_rst), .ce(ce), .shift_enable(shift_en), .load_enable(load_en), .parallel_in({write_data[31], write_data[27], write_data[23], write_data[19], write_data[15], write_data[11], write_data[7], write_data[3]}), .parallel_out(sr_out[3]), .serial_in(sio4), .serial_out(sio4_out));
+    flex_sr #(.MSB_FIRST(1), .POS(0)) f4(.clk(clk), .n_rst(n_rst), .shift_enable(shift_en), .load_enable(load_en), .parallel_in({write_data[31], write_data[27], write_data[23], write_data[19], write_data[15], write_data[11], write_data[7], write_data[3]}), .parallel_out(sr_out[3]), .serial_in(sio4), .serial_out(sio4_out));
 
     assign sio1 = rw1 ? sio1_out : 1'bz;
     assign sio2 = rw2 ? sio2_out : 1'bz;
@@ -104,7 +97,7 @@ module qspi_fsm #(
     logic ctr_en, ctr_clear;
 
 
-    flex_counter #(.SIZE(4), .POS(0), .CE(1)) bit_counter(.clk(clk), .n_rst(n_rst), .ce(ce), .count_enable(ctr_en), .clear(ctr_clear), .rollover_val(4'h8), .count_out(count_out), .rollover_flag(rollover_flag));
+    flex_counter #(.SIZE(4), .POS(0)) bit_counter(.clk(clk), .n_rst(n_rst), .count_enable(ctr_en), .clear(ctr_clear), .rollover_val(4'h8), .count_out(count_out), .rollover_flag(rollover_flag));
 
 
     always_comb begin

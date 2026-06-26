@@ -3,10 +3,9 @@
 module flex_sr #(
     parameter SIZE = 8,
     parameter MSB_FIRST = 0,
-    parameter POS = 1,
-    parameter CE = 0
+    parameter POS = 1
 ) (
-    input logic clk, input logic n_rst, shift_enable, serial_in, load_enable, ce,
+    input logic clk, input logic n_rst, shift_enable, serial_in, load_enable, 
     input logic [SIZE - 1:0] parallel_in, 
     output logic [SIZE - 1:0] parallel_out,
     output logic serial_out
@@ -26,7 +25,7 @@ module flex_sr #(
                 if(~n_rst) begin
                     Q <= '1;
                 end else begin
-                    Q <= CE ? (ce ? next_Q : Q) : next_Q;
+                    Q <= next_Q;
                 end
             end
         end
@@ -35,7 +34,7 @@ module flex_sr #(
                 if(~n_rst) begin
                     Q <= '1;
                 end else begin
-                    Q <= CE ? (ce ? next_Q : Q) : next_Q;
+                    Q <= next_Q;
                 end
             end
         end

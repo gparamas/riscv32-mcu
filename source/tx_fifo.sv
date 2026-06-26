@@ -9,7 +9,6 @@ module tx_fifo #(
     input logic clk, input logic n_rst,
     input logic [WIDTH-1:0] tx_data_in,
     input logic load, done,
-    input logic ce,
     output logic tx_full, tx_empty,
     output logic [WIDTH-1:0] tx_data_out
 );
@@ -54,9 +53,7 @@ module tx_fifo #(
                     read_addr <= '0;
                 end
                 else begin
-                    if(ce) begin
-                        read_addr <= next_read_addr;
-                    end
+                    read_addr <= next_read_addr;
                 end
             end
         end

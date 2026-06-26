@@ -5,7 +5,7 @@ module rx_fifo #(
 ) (
     input logic clk, input logic n_rst,
     input logic [31:0] rx_data_in,
-    input logic load, done, ce, reset,
+    input logic load, done, reset,
     output logic overrun, rx_empty,
     output logic [31:0] rx_data_out
 );
@@ -37,7 +37,6 @@ module rx_fifo #(
             read_addr <= '0;
             rx_count <= '0;
         end else begin
-            if(ce) begin
                 if(reset) begin
                     write_addr <= '0;
                     read_addr <= '0;
@@ -51,7 +50,6 @@ module rx_fifo #(
                     read_addr <= next_read_addr;
                     rx_count <= next_rx_count;
                 end
-            end
         end
     end
 `endif

@@ -2,10 +2,9 @@
 //`include "D:/vivado-projects/project_3/project_3.srcs/sources_1/imports/source/header.sv"
 module flex_counter #(
         SIZE = 8,
-        POS = 1,
-        CE = 0
+        POS = 1
     ) (
-        input logic clk, input logic n_rst, ce,
+        input logic clk, input logic n_rst,
         input logic clear, count_enable,
         input logic [SIZE-1:0] rollover_val,
         output logic [SIZE-1:0] count_out,
@@ -30,7 +29,7 @@ module flex_counter #(
                 if(~n_rst) begin
                     {count_out, rollover_flag} <= (SIZE + 1)'('b0);
                 end else begin
-                    {count_out , rollover_flag} <= CE ? (ce ? {n_c_out, n_r_flag} : {count_out, rollover_flag}) : {count_out, rollover_flag};
+                    {count_out , rollover_flag} <= {n_c_out, n_r_flag};
                 end
             end
         end
@@ -39,7 +38,7 @@ module flex_counter #(
                 if(~n_rst) begin
                     {count_out, rollover_flag} <= (SIZE + 1)'('b0);
                 end else begin
-                    {count_out , rollover_flag} <= CE ? (ce ? {n_c_out, n_r_flag} : {count_out, rollover_flag}) : {count_out, rollover_flag};
+                    {count_out , rollover_flag} <= {n_c_out, n_r_flag};
                 end
             end
         end

@@ -13,9 +13,8 @@ module qspi_test_full #(
 
     wire sio1, sio2, sio3, sio4;
     logic cs;
-    logic ce, cen;
 
-    flash f1(.SCLK(cen ? ce : clk), .CS(cs), .SI(sio1), .SO(sio2), .WP(sio3), .SIO3(sio4));
+    flash f1(.SCLK(clk), .CS(cs), .SI(sio1), .SO(sio2), .WP(sio3), .SIO3(sio4));
 
     apb_qspi aq1t (
         .clk(clk),
@@ -28,8 +27,7 @@ module qspi_test_full #(
         .prdata(prdata),
         .psaterr(psaterr),
         .cs(cs),
-        .sio1(sio1), .sio2(sio2), .sio3(sio3), .sio4(sio4), 
-        .ce(ce), .cen(cen)
+        .sio1(sio1), .sio2(sio2), .sio3(sio3), .sio4(sio4)
     );
 
 endmodule

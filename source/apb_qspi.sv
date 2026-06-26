@@ -10,8 +10,7 @@ module apb_qspi #(
     output logic [31:0] prdata,
     output logic psaterr,
     output logic cs,
-    inout wire sio1, sio2, sio3, sio4,
-    output logic ce, cen
+    inout wire sio1, sio2, sio3, sio4
 );
     
     logic reset, underrun, overrun;
@@ -24,7 +23,6 @@ module apb_qspi #(
     qspi_fsm q1 (
         .clk(clk), 
         .n_rst(n_rst), 
-        .ce(ce), .cen(cen), 
         .wdata(tx_data_out), 
         .empty(~tx_empty), 
         .reset(reset), 
@@ -44,7 +42,6 @@ module apb_qspi #(
         .clk(clk), .n_rst(n_rst),
         .tx_data_in(tx_data_in),
         .load(load_tx),
-        .ce(ce),
         .tx_empty(tx_empty),
         .done(done_tx),
         .tx_data_out(tx_data_out),
@@ -55,7 +52,6 @@ module apb_qspi #(
         .clk(clk), .n_rst(n_rst),
         .load(load_rx),
         .done(done_rx),
-        .ce(ce),
         .overrun(overrun),
         .rx_empty(rx_empty),
         .rx_data_out(rx_data_out),
