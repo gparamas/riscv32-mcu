@@ -10,7 +10,7 @@ module qspi_fsm #(
     inout wire sio1, sio2, sio3, sio4,
     output logic cs, ce, cen,
     output logic [31:0] rdata,
-    output logic data_ready, done, underrun
+    output logic data_ready, done, underrun, busy
 );
 
     typedef enum logic [3:0] {
@@ -126,6 +126,7 @@ module qspi_fsm #(
         ctr_en = 1'b0;
         ctr_clear = 1'b1;
         underrun = 1'b0;
+        busy = 1'b1;
 
         case(state) 
             IDLE: begin
@@ -134,6 +135,7 @@ module qspi_fsm #(
                     done = 1'b1;
                     n_state = GET_SEND_NUM;
                 end
+                busy = 1'b0;
             end
             GET_SEND_NUM: begin
                 if(~empty) begin
@@ -185,8 +187,8 @@ module qspi_fsm #(
             end
             SEND_DATA: begin
                 rw1 = 1'b1;
-                rw2 = ~start_xip;
-                rw3 = ~start_xip;
+                rw2 = 1'b1;
+                rw3 = 1'b1;
                 cs = 1'b0;
                 load_en = 1'b1;
                 ctr_en = 1'b1;

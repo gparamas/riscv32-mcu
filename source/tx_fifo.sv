@@ -37,29 +37,41 @@ module tx_fifo #(
         if(~n_rst) begin
             regs <= '{default: 0};
             write_addr <= '0;
-            read_addr <= '0;
             tx_count <= '0;
         end else begin
-            if(CE) begin
-                if(ce) begin
-                    if(load && ~tx_full) begin 
-                        regs[write_addr] <= tx_data_in;
-                    end
-                    write_addr <= next_write_addr;
-                    read_addr <= next_read_addr;
-                    tx_count <= next_tx_count;
-                end
+            if(load && ~tx_full) begin 
+                regs[write_addr] <= tx_data_in;
             end
-            else begin
-                if(load && ~tx_full) begin 
-                    regs[write_addr] <= tx_data_in;
-                end
-                write_addr <= next_write_addr;
-                read_addr <= next_read_addr;
-                tx_count <= next_tx_count;
-            end
+            write_addr <= next_write_addr;
+            tx_count <= next_tx_count;
         end
     end
+
+    generate
+        if(CE) begin
+            always_ff@(negedge clk, negedge n_rst) begin
+                if(!n_rst) begin
+                    read_addr <= '0;
+                end
+                else begin
+                    if(ce) begin
+                        read_addr <= next_read_addr;
+                    end
+                end
+            end
+        end
+        else begin
+            always_ff@(posedge clk, negedge n_rst) begin
+                if(!n_rst) begin
+                    read_addr <= '0;
+                end
+                else begin
+                    read_addr <= next_read_addr;
+                end
+            end
+        end
+    endgenerate
+
 `endif
 
     always_comb begin: REGS_AND_WRITE_ADDR
@@ -77,13 +89,7 @@ module tx_fifo #(
     end
 
     always_comb begin: TX_COUNT 
-        next_tx_count = tx_count;
-        if(load && !done) begin
-            next_tx_count = tx_count + 1;
-        end
-        else if(done && !load) begin
-            next_tx_count = tx_count - 1;
-        end
+        next_tx_count = write_addr - read_addr;
     end
 
     assign tx_data_out = regs[read_addr];

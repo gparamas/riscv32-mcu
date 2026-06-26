@@ -25,33 +25,39 @@ module qspi_apb_subordinate #(
             prdata <= '0;
         end
         else begin
-            regs <= next_regs;
-            prdata <= next_prdata; 
+            if(reset) begin
+                prdata <= '0;
+                regs <= '{default: 0};
+            end
+            else begin
+                regs <= next_regs;
+                prdata <= next_prdata; 
+            end
         end
     end
 
     assign reset = regs[1][0];
 
-    assign tx_data_in = regs[2];
+    assign tx_data_in = regs[3];
+
+    
 
     always_comb begin
         next_regs = regs;
-        next_regs[0][3:0] = {tx_full, underrun ? 1'b1 : regs[0][2], overrun ? 1'b1 : regs[0][1], busy};
+        next_regs[0]= {~rx_empty, tx_full, underrun ? 1'b1 : regs[0][2], overrun ? 1'b1 : regs[0][1], busy};
         next_regs[1] = '0;
-        next_regs[3] = rx_data_out;
+        next_regs[2] = rx_data_out;
         done_rx = 1'b0;
         next_prdata = '0;
         psaterr = 1'b0;
         load_tx = 1'b0;
+
         if(psel) begin
             if(pwrite) begin
                 if(paddr[0]) begin
                     next_regs[paddr[1:0]] = pwdata;
                     if(paddr[1]) begin
-                        load_tx  = penable;
-                    end
-                    else begin
-                        next_regs[0][2:1] = 2'b0;
+                        load_tx = penable;
                     end
                 end
                 else begin
@@ -61,11 +67,15 @@ module qspi_apb_subordinate #(
             else begin
                 if(~paddr[0]) begin
                     next_prdata = regs[paddr[1:0]];
-                    next_regs[0][4] = 1'b0;
                     if(paddr[1] && ~rx_empty) begin
                         done_rx = penable;
-                        next_regs[0][4] = 1'b1;
                     end
+                    if(~paddr[1]) begin
+                        next_regs[0][2:1] = 2'b0;
+                    end
+                end
+                else begin
+                    psaterr = 1'b1;
                 end
             end
         end

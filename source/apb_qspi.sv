@@ -26,13 +26,14 @@ module apb_qspi #(
         .n_rst(n_rst), 
         .ce(ce), .cen(cen), 
         .wdata(tx_data_out), 
-        .empty(tx_empty), 
+        .empty(~tx_empty), 
         .reset(reset), 
         .sio1(sio1), .sio2(sio2), .sio3(sio3), .sio4(sio4), .cs(cs), 
         .rdata(rx_data_in), 
         .data_ready(load_rx), 
         .done(done_tx),
-        .underrun(underrun)
+        .underrun(underrun),
+        .busy(busy)
     );
 
     tx_fifo #(
@@ -58,7 +59,8 @@ module apb_qspi #(
         .overrun(overrun),
         .rx_empty(rx_empty),
         .rx_data_out(rx_data_out),
-        .rx_data_in(rx_data_in)
+        .rx_data_in(rx_data_in),
+        .reset(reset)
     );
 
     qspi_apb_subordinate aq1 (
@@ -67,7 +69,7 @@ module apb_qspi #(
         .pwdata(pwdata), .paddr(paddr),
         .rx_data_out(rx_data_out),
         .tx_data_in(tx_data_in),
-        .rx_empty(rx_empty), .tx_full(tx_full), .underrun(underrun), .overrun(overrun), .busy(busy),
+        .rx_empty(~rx_empty), .tx_full(tx_full), .underrun(underrun), .overrun(overrun), .busy(busy),
         .prdata(prdata),
         .psaterr(psaterr),
         .done_rx(done_rx),
