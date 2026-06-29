@@ -9,8 +9,8 @@ import types::*;
     input logic [31:0] instr,
     input logic en,
     output logic [31:0] iaddr,
-    input logic [7:0] out_rdata,
-    output logic [7:0] out_wdata,
+    input logic [31:0] out_rdata,
+    output logic [31:0] out_wdata,
     output logic read_en, write_en, 
     output logic [31:0] apb_addr,
     output logic imem_ren, stall

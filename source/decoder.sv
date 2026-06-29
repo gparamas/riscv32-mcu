@@ -19,7 +19,7 @@ module decoder
     logic [4:0] prd, prd2;
     instr_t instr_type;
     instr_t prev_instr_type;
-    logic pstall;
+    logic pstall, pstall2;
     
     
 
@@ -47,7 +47,7 @@ module decoder
             prd <= mmio_stall || load_stall ? prd : (flush ? '0 : rd & {5{instr_type != BRANCH && instr_type != STORE}});
             prd2 <= mmio_stall || load_stall ? prd2 : (flush ? '0 : prd);  
             prev_instr_type <= mmio_stall || load_stall ? prev_instr_type : instr_type;
-            pstall <= load_stall;
+            pstall <= mmio_stall ? pstall : load_stall;
         end
     end
 `endif
@@ -151,7 +151,7 @@ module decoder
                 wen = 1'b1;
             end
             BRANCH: begin
-                load_stall = ((prev_instr_type == LOAD) && ((rs1 == prd) || (rs2 == prd))) & ~pstall;
+                load_stall = ((prev_instr_type == LOAD) && ((rs1 == prd) || (rs2 == prd))) & ~pstall; 
                 alusrc1 = (rs1_prd && prev_instr_type != LOAD) ? 2'h1 : (rs1_prd2 || rs1_prd ? 2'h3 : 2'h0);
                 alusrc2 = (rs2_prd && prev_instr_type != LOAD) ? 2'h1 : (rs2_prd2 || rs2_prd ? 2'h3 : 2'h0);
                 renm = 1'b0; wenm = 1'b0; memtoreg = 1'b0;

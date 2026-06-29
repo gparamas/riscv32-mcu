@@ -7,8 +7,8 @@ module dmem #(
     input logic renm, wenm,
     input logic [31:0] addr, wdata,
     input logic [2:0] funct3,
-    input logic [7:0] out_rdata,
-    output logic [7:0] out_wdata,
+    input logic [31:0] out_rdata,
+    output logic [31:0] out_wdata,
     output logic [31:0] rdata, apb_addr,
     output logic read_en, write_en,
     output logic stall
@@ -20,7 +20,7 @@ module dmem #(
 
     logic [31:0] data, n_data;
     logic [31:0] mask, n_mask;
-    assign out_wdata = wdata[7:0];
+    assign out_wdata = wdata;
 
     logic [1:0] state, next_state;
     assign apb_addr = addr;
@@ -115,9 +115,9 @@ module dmem #(
                     endcase
                 end
             end
-            else if(state != 2'b11) begin
+            else if(state != 2'b01) begin
                 stall = 1'b1;
-                next_state = state == 2'b0 ? 2'b01 : (state == 2'b01) ? 2'b11 : 2'b0;
+                next_state = state == 2'b0 ? 2'b01 : 2'b11;
                 read_en = renm;
                 write_en = wenm;
             end
@@ -160,7 +160,7 @@ module dmem #(
             endcase
         end
         else if (&paddr[17:16]) begin
-             rdata = {24'b0, out_rdata};
+            rdata = out_rdata;
         end
     end
 endmodule

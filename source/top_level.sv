@@ -22,8 +22,9 @@ module top_level #(
 
     logic read_en, write_en;
     logic [31:0] apb_addr_pr, apb_addr_dma, iaddr, instr;
-    logic [7:0] out_rdata, prdata, pwdata, out_wdata;
-    logic psel_uart, penable, pwrite, psaterr;
+    logic [31:0] out_rdata, prdata_uart, prdata_qspi, pwdata, out_wdata;
+    logic psel_uart, penable, pwrite, psaterr_uart;
+    logic psel_qspi, psaterr_qspi;
     logic [2:0] paddr;
     logic [31:0] instr_wdata;
     logic [31:0] instr_waddr;
@@ -32,7 +33,7 @@ module top_level #(
 
     dma dm1(
         .clk(clk_out), .n_rst(n_rst),
-        .rdata(out_rdata), .uart_dreq(uart_dreq), 
+        .rdata(out_rdata[7:0]), .uart_dreq(uart_dreq), 
         .read_en(read_en_dma), .write_en(write_en_dma), .pr_en(pr_en),
         .wdata(instr_wdata), .waddr(instr_waddr), .raddr(apb_addr_dma)
     );
@@ -53,10 +54,10 @@ module top_level #(
 
     apb_manager am1(
         .clk(clk_out), .n_rst(n_rst),
-        .prdata(prdata), .psaterr(psaterr),
+        .prdata_uart(prdata_uart), .psaterr_uart(psaterr_uart), .prdata_qspi(prdata_qspi), .psaterr_qspi(psaterr_qspi),
         .apb_addr(pr_en ? apb_addr_pr : apb_addr_dma), .wdata(out_wdata),
         .read_en(pr_en ? read_en : read_en_dma), .write_en(pr_en ? write_en : write_en_dma),
-        .psel_uart(psel_uart), .penable(penable),
+        .psel_uart(psel_uart), .penable(penable), .psel_qspi(psel_qspi),
         .pwrite(pwrite), .paddr(paddr), .pwdata(pwdata),
         .out_rdata(out_rdata)
     );
@@ -65,10 +66,25 @@ module top_level #(
         .clk(clk_out), .n_rst(n_rst),
         .serial_in(uart_rx), .uart_tx(uart_tx),
         .psel(psel_uart), .penable(penable), .pwrite(pwrite),
-        .paddr(paddr), .pwdata(pwdata), .prdata(prdata),
-        .psaterr(psaterr), .uart_dreq(uart_dreq)
+        .paddr(paddr), .pwdata(pwdata[7:0]), .prdata(prdata_uart[7:0]),
+        .psaterr(psaterr_uart), .uart_dreq(uart_dreq)
     );
 
+    apb_qspi aq1t (
+        .clk(clk),
+        .n_rst(n_rst),
+        .psel(psel_qspi),
+        .penable(penable),
+        .pwrite(pwrite),
+        .paddr(paddr),
+        .pwdata(pwdata),
+        .prdata(prdata_qspi),
+        .psaterr(psaterr_qspi),
+        .cs(cs),
+        .sio1(sio1), .sio2(sio2), .sio3(sio3), .sio4(sio4)
+    );
+
+    flash f1(.SCLK(clk), .CS(cs), .SI(sio1), .SO(sio2), .WP(sio3), .SIO3(sio4));
 
 endmodule
 

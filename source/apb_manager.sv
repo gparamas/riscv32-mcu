@@ -4,26 +4,26 @@ module apb_manager #(
     // parameters
 ) (
     input logic clk, input logic n_rst,
-    input logic [7:0] prdata, wdata,
-    input logic psaterr,
+    input logic [31:0] prdata_uart, prdata_qspi, wdata, 
+    input logic psaterr_uart, psaterr_qspi,
     input logic [31:0] apb_addr, 
     input logic read_en, write_en,
-    output logic psel_uart, penable, pwrite, 
+    output logic psel_uart, penable, pwrite, psel_qspi,
     output logic [2:0] paddr,
-    output logic [7:0] pwdata,
-    output logic [7:0] out_rdata
+    output logic [31:0] pwdata,
+    output logic [31:0] out_rdata
 );
     typedef enum logic [1:0] {
         IDLE, ADDRESS_PHASE, DATA_PHASE
     } state_t;
 
     state_t state, n_state;
-    logic n_psel_uart, n_penable, n_pwrite;
+    logic n_psel_uart, n_psel_qspi, n_penable, n_pwrite;
     logic [2:0] n_paddr;
-    logic [7:0] n_pwdata;
-    logic [7:0] rdata, n_rdata;
+    logic [31:0] n_pwdata;
+    logic [31:0] rdata, n_rdata;
     logic [31:0] r_apb_addr, n_r_apb_addr;
-    logic [7:0] r_wdata, n_r_wdata;
+    logic [31:0] r_wdata, n_r_wdata;
     logic r_write_en, n_r_write_en;
 
 
@@ -58,6 +58,7 @@ module apb_manager #(
         if(~n_rst) begin
             state <= IDLE;
             psel_uart <= 1'b0;
+            psel_qspi <= 1'b0;
             penable <= 1'b0;
             paddr <= '0;
             pwrite <= '0;
@@ -68,6 +69,7 @@ module apb_manager #(
             r_write_en <= '0;
         end else begin
             state <= n_state;
+            psel_qspi <= n_psel_qspi;
             psel_uart <= n_psel_uart;
             penable <= n_penable;
             paddr <= n_paddr;
@@ -84,6 +86,7 @@ module apb_manager #(
     
     always_comb begin
         n_psel_uart = 1'b0;
+        n_psel_qspi = 1'b0;
         n_paddr = 1'b0;
         n_penable = 1'b0;
         n_pwrite = 1'b0;
@@ -93,10 +96,16 @@ module apb_manager #(
         n_r_apb_addr = r_apb_addr;
         n_r_wdata = r_wdata;
         n_r_write_en = r_write_en;
-        if((read_en | write_en) && (state == IDLE)) begin
+        if((read_en | write_en) && (state == IDLE || state == DATA_PHASE)) begin
             if(&apb_addr[17:16]) begin 
-                n_paddr = apb_addr[2:0];
-                n_psel_uart = 1'b1;
+                case(apb_addr[8])
+                    1'b0: n_psel_uart = 1'b1;
+                    1'b1: n_psel_qspi = 1'b1;
+                endcase
+                if(state == DATA_PHASE && !pwrite) begin
+                    n_rdata = psel_qspi ? prdata_qspi : prdata_uart;
+                end
+                n_paddr = apb_addr[4:2];
                 n_penable = 1'b0;
                 n_pwrite = write_en;
                 n_pwdata = wdata;
@@ -108,23 +117,24 @@ module apb_manager #(
         end
         else if (state == ADDRESS_PHASE) begin
             n_penable = 1'b1;
-            n_psel_uart = 1'b1;
+            n_psel_uart = psel_uart;
+            n_psel_qspi = psel_qspi;
             n_pwrite = r_write_en;
             n_pwdata = r_wdata;
-            n_paddr = r_apb_addr[2:0];
+            n_paddr = r_apb_addr[4:2];
             n_state = DATA_PHASE;
         end	
         else if (state == DATA_PHASE) begin
             n_state = IDLE;
             if(!pwrite) begin
-                n_rdata = prdata;
+                n_rdata = psel_qspi ? prdata_qspi : prdata_uart;
             end
         end
     end
 
     always_comb begin
         if(state == DATA_PHASE && pwrite == 1'b0) begin
-            out_rdata = prdata;
+            out_rdata = psel_qspi ? prdata_qspi : prdata_uart;
         end
         else begin
             out_rdata = rdata;

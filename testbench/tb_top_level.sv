@@ -13,6 +13,8 @@ module tb_top_level ();
 
     logic clk, n_rst;
     logic uart_rx, uart_tx;
+    // logic cs;
+    // wire sio1, sio2, sio3, sio4;
 
     // clockgen
     always begin
@@ -41,7 +43,7 @@ module tb_top_level ();
     
     initial begin
         imem = '{default: 0};
-        fptr = $fopen("/home/ecegridfs/a/337mg016/r5processor/main.bin", "rb");
+        fptr = $fopen("/home/ecegridfs/a/337mg016/r5processor/main_qspi.bin", "rb");
         size = $fread(imem, fptr);
         foreach (imem[i])
             imem[i] = {<<8{imem[i]}};
@@ -121,7 +123,8 @@ module tb_top_level ();
         join_any
         disable fork;
         fork
-            repeat(20000) @(posedge clk);
+            wait(DUT.iaddr == 32'h3E4);
+            //wait(DUT.iaddr == 32'h330);
             begin
                 for(;;) begin
                     check_tx(100);
