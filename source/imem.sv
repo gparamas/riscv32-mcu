@@ -4,7 +4,7 @@ module imem #(
     // parameters
 ) (
     input logic clk, input logic n_rst,
-    input logic wen, ren, stall,
+    input logic wen, ren, stall, flush,
     input logic [31:0] waddr, raddr,
     input logic [31:0] wdata,
     output logic [31:0] rdata
@@ -29,8 +29,8 @@ module imem #(
             pstall <= '0;
             pren <= '0;
         end else begin
-            pstall <= stall;
-            pren <= ren;
+            pstall <= flush ? '0 : stall;
+            pren <= flush ? '0 : ren;
         end
     end
 `endif

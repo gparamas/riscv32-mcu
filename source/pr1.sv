@@ -13,7 +13,7 @@ import types::*;
     output logic [31:0] out_wdata,
     output logic read_en, write_en, 
     output logic [31:0] apb_addr,
-    output logic imem_ren, stall
+    output logic imem_ren, stall, flush
 );
 
     logic [31:0] next_pc, pc;
@@ -49,19 +49,30 @@ import types::*;
 
     assign pcsrc2 = pc + 32'h4;
     assign pcsrc1 = id_ex[118:87] + (id_ex[9] ? id_ex[86:55] : id_ex[150:119]);
-    assign next_pc = (stall || ~en) ? pc : (((take_branch && id_ex[8]) || id_ex[9] || id_ex[10]) ? pcsrc1 : pcsrc2);
+    //assign next_pc = (stall || ~en) ? pc : (((take_branch && id_ex[8]) || id_ex[9] || id_ex[10]) ? pcsrc1 : pcsrc2);
+    assign next_pc = ((take_branch && id_ex[8]) || id_ex[9] || id_ex[10]) ? pcsrc1 : ((stall || ~en) ? pc : pcsrc2);
     assign stall = load_stall | mmio_stall;
 
     //if
 
     assign imem_ren = en & ~((take_branch && id_ex[8]) || id_ex[9] || id_ex[10]) & ~stall;
+    assign flush = ((take_branch && id_ex[8]) || id_ex[9] || id_ex[10]);
     
     always_comb begin
-        if(stall || ~en) begin
-            next_if_id = if_id;
-        end
-        else if(((take_branch && id_ex[8]) || id_ex[9] || id_ex[10])) begin
+        // if(stall || ~en) begin
+        //     next_if_id = if_id;
+        // end
+        // else if(((take_branch && id_ex[8]) || id_ex[9] || id_ex[10])) begin
+        //     next_if_id = '0;
+        // end
+        // else begin
+        //     next_if_id = pc;
+        // end
+        if((take_branch && id_ex[8]) || id_ex[9] || id_ex[10]) begin
             next_if_id = '0;
+        end
+        else if(stall || ~en) begin
+            next_if_id = if_id;
         end
         else begin
             next_if_id = pc;
@@ -96,10 +107,29 @@ import types::*;
 
 
     always_comb begin
-        if(mmio_stall || ~en) begin
+        // if(mmio_stall || ~en) begin
+        //     next_id_ex = id_ex;
+        // end
+        // else if(((take_branch && id_ex[8]) || id_ex[9] || id_ex[10] || load_stall)) begin
+        //     next_id_ex = '0;
+        // end
+        // else begin
+        //     next_id_ex[3:0] = aluop;
+        //     next_id_ex[5:4] = alusrc1;
+        //     next_id_ex[7:6] = alusrc2;
+        //     next_id_ex[14:8] = {renm, wenm, wen, memtoreg, jal, jalr, branch};
+        //     next_id_ex[17:15] = funct3;
+        //     next_id_ex[22:18] = rd;
+        //     next_id_ex[150:23] = {if_id, imm, rdata1, rdata2};
+        //     next_id_ex[152:151] = memsrc;
+        // end
+        if(((take_branch && id_ex[8]) || id_ex[9] || id_ex[10])) begin
+            next_id_ex = '0;
+        end
+        else if(mmio_stall || ~en) begin
             next_id_ex = id_ex;
         end
-        else if(((take_branch && id_ex[8]) || id_ex[9] || id_ex[10] || load_stall)) begin
+        else if(load_stall) begin
             next_id_ex = '0;
         end
         else begin

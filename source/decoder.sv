@@ -44,8 +44,10 @@ module decoder
             prev_instr_type <= IDLE;
             pstall <= 1'b0;
         end else begin
-            prd <= mmio_stall || load_stall ? prd : (flush ? '0 : rd & {5{instr_type != BRANCH && instr_type != STORE}});
-            prd2 <= mmio_stall || load_stall ? prd2 : (flush ? '0 : prd);  
+            // prd <= mmio_stall || load_stall ? prd : (flush ? '0 : rd & {5{instr_type != BRANCH && instr_type != STORE}});
+            // prd2 <= mmio_stall || load_stall ? prd2 : (flush ? '0 : prd);  
+            prd <= flush ? '0 : (mmio_stall || load_stall ? prd : (rd & {5{instr_type != BRANCH && instr_type != STORE}}));
+            prd2 <= flush ? '0  : (mmio_stall || load_stall ? prd2 : prd);  
             prev_instr_type <= mmio_stall || load_stall ? prev_instr_type : instr_type;
             pstall <= mmio_stall ? pstall : load_stall;
         end
@@ -110,28 +112,28 @@ module decoder
         load_stall = 1'b0;
         case(instr_type) 
             REG_REG: begin
-                load_stall = ((prev_instr_type == LOAD) && ((rs1 == prd) || (rs2 == prd))) & ~pstall;
+                load_stall = (prev_instr_type == LOAD) && (rs1_prd || rs2_prd) & ~pstall;
                 alusrc1 = (rs1_prd && prev_instr_type != LOAD) ? 2'h1 : (rs1_prd2 || rs1_prd ? 2'h3 : 2'h0);
                 alusrc2 = (rs2_prd && prev_instr_type != LOAD) ? 2'h1 : (rs2_prd2 || rs2_prd ? 2'h3 : 2'h0);
                 renm = 1'b0; wenm = 1'b0; memtoreg = 1'b0;
                 wen = 1'b1;
             end
             REG_IMM: begin
-                load_stall = ((prev_instr_type == LOAD) && (rs1 == prd)) & ~pstall;
+                load_stall = ((prev_instr_type == LOAD) && rs1_prd) & ~pstall;
                 alusrc1 = (rs1_prd && prev_instr_type != LOAD) ? 2'h1 : (rs1_prd2 || rs1_prd ? 2'h3 : 2'h0);
                 alusrc2 = 2'h2;
                 renm = 1'b0; wenm = 1'b0; memtoreg = 1'b0;
                 wen = 1'b1;
             end
             LOAD: begin
-                load_stall = ((prev_instr_type == LOAD) && (rs1 == prd)) & ~pstall;
+                load_stall = ((prev_instr_type == LOAD) && (rs1_prd)) & ~pstall;
                 alusrc1 = (rs1_prd && prev_instr_type != LOAD) ? 2'h1 : (rs1_prd2 || rs1_prd ? 2'h3 : 2'h0);
                 alusrc2 = 2'h2;
                 renm = 1'b1; wenm = 1'b0; memtoreg = 1'b1;
                 wen = 1'b1;
             end
             STORE: begin
-                load_stall = ((prev_instr_type == LOAD) && ((rs1 == prd)|| (rs2 == prd))) & ~pstall;
+                load_stall = ((prev_instr_type == LOAD) && ((rs1_prd)|| (rs2_prd))) & ~pstall;
                 alusrc1 = (rs1_prd && prev_instr_type != LOAD) ? 2'h1 : (rs1_prd2 || rs1_prd ? 2'h3 : 2'h0);
                 alusrc2 = 2'h2;
                 memsrc = (rs2_prd && prev_instr_type != LOAD) ? 2'b01 : (rs2_prd2 || rs2_prd ? 2'b11 : 2'b0);
@@ -151,7 +153,7 @@ module decoder
                 wen = 1'b1;
             end
             BRANCH: begin
-                load_stall = ((prev_instr_type == LOAD) && ((rs1 == prd) || (rs2 == prd))) & ~pstall; 
+                load_stall = ((prev_instr_type == LOAD) && ((rs1_prd) || (rs2_prd))) & ~pstall; 
                 alusrc1 = (rs1_prd && prev_instr_type != LOAD) ? 2'h1 : (rs1_prd2 || rs1_prd ? 2'h3 : 2'h0);
                 alusrc2 = (rs2_prd && prev_instr_type != LOAD) ? 2'h1 : (rs2_prd2 || rs2_prd ? 2'h3 : 2'h0);
                 renm = 1'b0; wenm = 1'b0; memtoreg = 1'b0;
